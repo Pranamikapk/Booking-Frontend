@@ -2,7 +2,7 @@ import React from 'react'
 import { useDispatch } from 'react-redux'
 import { Link } from 'react-router-dom'
 import { AppDispatch } from '../../app/store'
-import { logout } from '../../features/manager/managerSlice'
+import { logoutThunk } from '../../features/manager/managerSlice'
 
 interface SideBarProps {
   isOpen: boolean
@@ -16,7 +16,7 @@ const SideBar: React.FC<SideBarProps> = ({ isOpen, toggleSidebar }) => {
     { to: "/manager", label: "Dashboard" },
     { to: "/manager/hotels", label: "Hotels" },
     { to: "/manager/reservations", label: "Reservations" },
-    { to: "/manager/inbox", label: "Inbox" },
+    { to: "/manager/chat", label: "Inbox" },
     { to: "/manager/transactions", label: "Transactions" },
   ]
 
@@ -65,7 +65,7 @@ const SideBar: React.FC<SideBarProps> = ({ isOpen, toggleSidebar }) => {
         <div className="absolute bottom-0 w-full p-4 border-t">
           <button
             className="w-full px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-            onClick={() => dispatch(logout())}
+            onClick={() => dispatch(logoutThunk())}
           >
             Logout
           </button>

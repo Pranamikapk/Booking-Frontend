@@ -2,8 +2,10 @@
 
 import { Plus, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { RootState } from '../../app/store';
 import Spinner from '../../components/Spinner';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
@@ -20,17 +22,21 @@ export default function BookingDetails() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancellationReason, setCancellationReason] = useState('');
   const [isRequestPending, setIsRequestPending] = useState(false);
+  const token = useSelector((state:RootState)=>state.auth.user?.token)
+  const navigate = useNavigate()
 
   useEffect(() => {
     const fetchBookingDetails = async () => {
       setIsLoading(true);
       try {
+        console.log("Token:",token);
+        
         const response = await fetch(`${API_URL}booking/${bookingId}`, {
           headers: {
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${token}`
           }
         });
+        
         if (!response.ok) {
           throw new Error('Failed to fetch booking details');
         }
@@ -47,6 +53,9 @@ export default function BookingDetails() {
       fetchBookingDetails();
     }
   }, [bookingId]);
+console.log(bookingId);
+console.log(booking);
+
 
   const handleCancelBookingRequest = async () => {
     if (!bookingId) return;
@@ -87,7 +96,7 @@ export default function BookingDetails() {
     }
   };
 
-  console.log(booking?.cancellationRequest);
+  console.log('booking?.cancellationRequest',booking?.cancellationRequest);
   
   if (isLoading) return <Spinner />;
   if (error) return <div className="text-red-500 text-center">{error}</div>;
@@ -218,7 +227,7 @@ export default function BookingDetails() {
           <h3 className="text-xl font-semibold mb-2">Hotel Description</h3>
           <p className="text-gray-700">{booking.hotel.description}</p>
         </div>
-        {/* <div className="px-6 py-4">
+        <div className="px-6 py-4">
           {booking.cancellationRequest ? (
             <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4" role="alert">
               <p className="font-bold">Cancellation Request Status: {booking.cancellationRequest.status}</p>
@@ -233,7 +242,9 @@ export default function BookingDetails() {
               {booking.status === 'cancellation_pending' ? 'Cancellation Pending' : 'Cancel Booking'}
             </Button>
           )}
-        </div> */}
+          <Button variant='primary' onClick={()=>navigate('/chat')} disabled={booking.status === 'cancellation_pending'}
+          >Message</Button>
+        </div>
       </div>
 
       <Modal

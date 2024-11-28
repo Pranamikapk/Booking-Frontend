@@ -2,13 +2,13 @@ import { HotelFormState } from "./hotelTypes";
 import { UserCredentials } from "./userTypes";
 
 export interface BookingData {
-    userId: string;  
+    user: string;  
     hotelId: string;
     checkInDate: string;
     checkOutDate: string;
     guests: number;
     totalPrice: number;
-    userCredentials: UserCredentials;
+    userCredentials: Partial<UserCredentials>;
 }
 
 export interface CancellationRequest {

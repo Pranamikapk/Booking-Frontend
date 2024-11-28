@@ -12,6 +12,8 @@ export default function Account(): React.JSX.Element | null {
   const { user, isLoading, isSuccess, isError, message } = useSelector((state: RootState) => state.auth)
   const storedUser = JSON.parse(localStorage.getItem('user') || '{}')
 
+  console.log("User:",user);
+  
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
 
@@ -19,7 +21,6 @@ export default function Account(): React.JSX.Element | null {
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [profileImage, setProfileImage] = useState<string | null>(null)
-  const [walletBalance, setWalletBalance] = useState(0)
 
   useEffect(() => {
     if (user) {
@@ -104,7 +105,7 @@ export default function Account(): React.JSX.Element | null {
               <h2 className="text-2xl font-bold ">Profile</h2>
               <div className="flex items-center space-x-2 bg-gray-100 p-3 rounded-lg shadow-lg">
                 <Wallet className="text-primary" />
-                <span className="text-lg font-semibold">Wallet Balance: ${walletBalance.toFixed(2)}</span>
+                <span className="text-lg font-semibold">Wallet Balance: ₹ { user.wallet.toFixed(2)}</span>
               </div>
             </div>
             <div className="p-6 flex flex-col md:flex-row">

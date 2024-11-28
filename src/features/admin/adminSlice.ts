@@ -33,6 +33,7 @@ export const login = createAsyncThunk<Admin, {email : string ; password: string}
     async(admin,thunkAPI) => {
         try {
             const response = await adminService.login(admin);
+            localStorage.setItem('admin', JSON.stringify(response)); 
             localStorage.setItem('token', response.token); 
             console.log("Slice",admin);
             return response
@@ -65,17 +66,17 @@ export const getAllUsers = createAsyncThunk<User[],void,{state: RootState; rejec
                 return thunkAPI.rejectWithValue("User not authenticated")
             }
             const response = await adminService.getAllUsers(token!)
-            const users: User[] = response.map(user => ({
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-                token: user.token,
-                isVerified: user.isVerified,
-                isBlocked: user.isBlocked,
-                role: user.role || "N/A", 
-            }));
+            // const users: Partial<User>[] = response.map(user => ({
+            //     _id: user._id,
+            //     name: user.name,
+            //     email: user.email,
+            //     token: user.token,
+            //     isVerified: user.isVerified,
+            //     isBlocked: user.isBlocked,
+            //     role: user.role || "N/A", 
+            // }));
 
-            return users;
+            return response;
         } catch (error : any) {
             const message = 
             (error.response && 
@@ -97,16 +98,16 @@ export const getAllManagers = createAsyncThunk<Manager[], void, { state: RootSta
           return thunkAPI.rejectWithValue('User not authenticated');
         }
         const response = await adminService.getAllManagers(token);
-        const managers: Manager[] = response.map(manager => ({
-          _id: manager._id,
-          name: manager.name,
-          email: manager.email,
-          isBlocked: manager.isBlocked,
-          phone: manager.phone || 'N/A',
-          meta: manager.meta || {},
-        }));
+        // const managers: Partial<Manager>[] = response.map(manager => ({
+        //   _id: manager._id,
+        //   name: manager.name,
+        //   email: manager.email,
+        //   isBlocked: manager.isBlocked,
+        //   phone: manager.phone || 'N/A',
+        // //   meta: manager.meta || {},
+        // }));
   
-        return managers;
+        return response;
       } catch (error: any) {
         const message =
           (error.response && error.response.data && error.response.data.message) ||
@@ -139,6 +140,7 @@ export const blockUser = createAsyncThunk<User , string , {state : RootState;rej
         }
     }
 )
+
 
 export const getHotel = createAsyncThunk(
     "adminAuth/hotelList",
@@ -241,7 +243,7 @@ export const adminSlice = createSlice({
             state.isLoading = false
             state.isSuccess = true
             state.isError = false
-            state.users = action.payload
+            state.users = action.payload;
         })
         .addCase(getAllManagers.pending, state => {
             state.isLoading = true;

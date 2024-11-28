@@ -30,6 +30,8 @@ export default function Reservations() {
   }, [dispatch, manager]);
 
   const handleDetailsClick = (bookingId: string) => {
+    console.log("Clicked:",bookingId);
+    
     navigate(`/manager/reservations/${bookingId}`);
   };
 

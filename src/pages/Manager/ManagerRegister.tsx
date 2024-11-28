@@ -6,7 +6,7 @@ import { toast } from 'react-toastify'
 import { AppDispatch, RootState } from '../../app/store'
 import OtpModal from '../../components/modals/OtpModal'
 import Spinner from '../../components/Spinner'
-import { register, reset } from '../../features/manager/managerSlice'
+import { registerThunk, reset } from '../../features/manager/managerSlice'
 
 interface FormData {
   hotel: string
@@ -131,8 +131,8 @@ function ManagerRegister() {
         }
         console.log(managerData);
         try {
-          const resultAction = await dispatch(register(managerData));
-          if (register.fulfilled.match(resultAction)) {
+          const resultAction = await dispatch(registerThunk(managerData));
+          if (registerThunk.fulfilled.match(resultAction)) {
             toast.success('Manager Registered Successfully', {
               className: 'toast-custom',
             });

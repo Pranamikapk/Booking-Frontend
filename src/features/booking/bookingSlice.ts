@@ -12,22 +12,29 @@ interface BookingState {
 
 const API_URL = 'http://localhost:3000/';
 
-export const createBooking = createAsyncThunk<Booking, BookingData, { rejectValue: string }>(
+export const createBooking = createAsyncThunk<Booking, BookingData, { state: RootState, rejectValue: string }>(
   "booking/createBooking",
-  async (bookingData, { rejectWithValue }) => {
+  async (bookingData, { getState, rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getState().auth.user?.token;
       if (!token) {
         return rejectWithValue("No token found");
       }
-      const response = await axios.post("/booking", bookingData, {
+      console.log("BookingData:", bookingData);
+      
+      const response = await axios.post(`${API_URL}booking`, bookingData, {
         headers: {
-          Authorization: `Bearer ${token}`, 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
+        withCredentials: true 
       });
+      console.log('Create Booking:', response.data);
+      
       return response.data;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || "An error occurred");
+      console.error('Error creating booking:', error.response?.data || error.message);
+      return rejectWithValue(error.response?.data?.message || "An error occurred while creating the booking");
     }
   }
 );
@@ -37,13 +44,16 @@ export const fetchBookings = createAsyncThunk<Booking[], void, { state: RootStat
   async (_, { getState, rejectWithValue }) => {
     try {
       const token = getState().auth.user?.token
+      
       const response = await axios.get(`${API_URL}listBookings`, {
         headers: {
+        'Authorization' : `Bearer ${token}`,
         'Accept': 'application/json',
-        'Authorization' : `Bearer ${token}`
-      }});
-      console.log('Response headers:', response.headers);
-      if (response.headers['content-type']?.includes('application/json')) {
+
+      },
+      withCredentials: true 
+    });
+        if (response.headers['content-type']?.includes('application/json')) {
         return response.data;
       } else {
         console.error('Expected JSON response, received:', response.headers['content-type']);
@@ -56,16 +66,29 @@ export const fetchBookings = createAsyncThunk<Booking[], void, { state: RootStat
   }
 );
 
-export const bookingDetails = createAsyncThunk<Booking[], {bookingId : string}, { rejectValue: string }>(
+export const bookingDetails = createAsyncThunk<Booking[], {bookingId : string}, { state:RootState, rejectValue: string }>(
   "booking/bookingDetails",
-  async ({bookingId}, { rejectWithValue }) => {
+  async (bookingId, {getState, rejectWithValue }) => {
     console.log("Received bookingId:", bookingId); 
-
+    
     try {
+      const token = getState().auth.user?.token
+      console.log("Token:",token);
+
+      if (!token) {
+        return rejectWithValue('No token found. Please log in.');
+      }
+      console.log('token',token);
+      
       const response = await axios.get(`${API_URL}booking/${bookingId}`, {
         headers: {
-        'Accept': 'application/json'
-      }});
+        'Accept': 'application/json',
+        'Authorization' : `Bearer ${token}`
+      },
+      withCredentials: true 
+    });
+    console.log('BookingDetails:',response);
+    
       if (!response.data || typeof response.data !== 'object') {
         console.error('Expected JSON object response, received:', response.data);
         return rejectWithValue('Expected JSON object response, but received non-object.');
@@ -91,7 +114,8 @@ export const listReservations = createAsyncThunk<BookingState[], { managerId: st
         headers: {
           'Accept': 'application/json',
           'Authorization': `Bearer ${token}`
-        }
+        },
+        withCredentials: true 
       });
       if (response.headers['content-type']?.includes('application/json')) {
         return response.data;
@@ -108,19 +132,24 @@ export const listReservations = createAsyncThunk<BookingState[], { managerId: st
 
 export const reservationDetails = createAsyncThunk<BookingData[], {bookingId : string}, { state: RootState, rejectValue: string }>(
   "booking/reservationDetails",
-  async (bookingId, { getState, rejectWithValue }) => {
+  async ({bookingId}, { getState, rejectWithValue }) => {
     try {
       const token = getState().managerAuth.manager?.token;
       const response = await axios.get(`${API_URL}manager/reservations/${bookingId}`, {
         headers: {
         'Accept': 'application/json',
         'Authorization': `Bearer ${token}`
-      }});
+      },
+      withCredentials: true 
+    });
+      console.log("reservationDetails:",response);
+      
       if (!response.data || typeof response.data !== 'object') {
         console.error('Expected JSON object response, received:', response.data);
         return rejectWithValue('Expected JSON object response, but received non-object.');
       }
       return response.data;
+
     } catch (error: any) {
       console.error('Fetch failed:', error);
       return rejectWithValue(error.response?.data?.message || "Failed to fetch bookings");
@@ -128,39 +157,33 @@ export const reservationDetails = createAsyncThunk<BookingData[], {bookingId : s
   }
 )
 
-export const handleCancelBooking = createAsyncThunk<
-  BookingData[],
-  { bookingId: string; reason: string },
-  { state: RootState, rejectValue: string }
->(
-  "booking/cancelRequest",
-  async ({ bookingId, reason }, { getState ,rejectWithValue }) => {
+export const approveCancellation = createAsyncThunk(
+  'booking/approveCancellation',
+  async ({ bookingId, token }: { bookingId: string; token?: string }, { rejectWithValue }) => {
     try {
-      const token = getState().auth.user?.token;
-      const response = await fetch(`${API_URL}cancelRequest`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization' : `Bearer ${token}`
-        },
-        body: JSON.stringify({ bookingId, reason }),
+      const response = await axios.post(`${API_URL}manager/cancel/${bookingId}/approve`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
       });
-
-      if (response.ok) {
-        const result = await response.json();
-        console.log('Cancellation request submitted successfully:', result);
-        return result;
-      } else {
-        console.error('Failed to submit cancellation request:', response.statusText);
-        return rejectWithValue('Failed to submit cancellation request');
-      }
-    } catch (error) {
-      console.error('Error submitting cancellation request:', error);
-      return rejectWithValue('Error submitting cancellation request');
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response.data);
     }
   }
 );
 
+export const rejectCancellation = createAsyncThunk(
+  'booking/rejectCancellation',
+  async ({ bookingId, token }: { bookingId: string; token?: string }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`${API_URL}manager/cancel/${bookingId}/reject`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
 
 
 
@@ -199,7 +222,6 @@ const bookingSlice = createSlice({
       .addCase(fetchBookings.fulfilled, (state, action: PayloadAction<Booking[]>) => {
         state.isLoading = false;
         state.bookings = action.payload;
-        console.log("Bookings updated in state:", state.bookings);
       })
       .addCase(fetchBookings.rejected, (state, action) => {
         state.isLoading = false;
@@ -245,20 +267,17 @@ const bookingSlice = createSlice({
         state.isError = action.payload ?? "An error occurred";
         console.error("Error fetching bookingdetails:", state.isError);
       })
-      .addCase(handleCancelBooking.pending, (state) => {
-        state.isLoading = true;
-        state.isError = null;
+      .addCase(approveCancellation.fulfilled, (state, action) => {
+        const index = state.bookings.findIndex(booking => booking._id === action.payload._id);
+        if (index !== -1) {
+          state.bookings[index] = action.payload;
+        }
       })
-      .addCase(handleCancelBooking.fulfilled, (state, action: PayloadAction<BookingData[]>) => {
-        state.isLoading = false;
-        state.bookings = action.payload;
-        state.isError = null;
-        console.log(action.payload);
-        
-      })
-      .addCase(handleCancelBooking.rejected, (state, action) => {
-        state.isLoading = false;
-        state.isError = action.payload as string;
+      .addCase(rejectCancellation.fulfilled, (state, action) => {
+        const index = state.bookings.findIndex(booking => booking._id === action.payload._id);
+        if (index !== -1) {
+          state.bookings[index] = action.payload;
+        }
       });
   },
 });

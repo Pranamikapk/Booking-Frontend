@@ -6,6 +6,7 @@ import Layout from '../layouts/Layout'
 import ManagerLogin from '../pages/Manager/ManagerLogin'
 import Account from '../pages/User/Account'
 import BookingDetails from '../pages/User/BookingDetails'
+import ChatInterface from '../pages/User/Chat'
 import Home from '../pages/User/Home'
 import HotelDetails from '../pages/User/HotelDetails'
 import Login from '../pages/User/Login'
@@ -29,6 +30,8 @@ const UserRouter = () => {
           <Route path="/search" element={<Search />} />
           <Route path="/booking" element={<Order />} />
           <Route path="/booking/:bookingId" element={<BookingDetails />} />
+          <Route path="/chat" element={<ChatInterface bookingId= '6734231bb88edbf6e938a041' recipientId= '6734231bb88edbf6e938a041' recipientName= 'string' />} />
+
         </Route>
 
         <Route path='/manager/login' element={<ManagerLogin/>}/>

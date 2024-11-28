@@ -3,6 +3,7 @@ import { useSelector } from "react-redux"
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom"
 import ManagerLayout from "../layouts/ManagerLayout"
 import AddHotel from "../pages/Manager/AddHotel"
+import ChatInterface from "../pages/Manager/Chat/ChatInterface"
 import EditHotel from "../pages/Manager/EditHotel"
 import HotelDetails from "../pages/Manager/HotelDetails"
 import Hotels from "../pages/Manager/Hotels"
@@ -32,7 +33,7 @@ const ManagerRouter = () => {
                     <Route path='/manager/reservations' element={manager ? <Reservations/> : <Navigate to = "/manager/login"/> } />
                     <Route path='/manager/reservations/:bookingId' element={manager ? <ReservationDetails/> : <Navigate to = "/manager/login"/> } />
                     <Route path='/manager/transactions' element={manager ? <ManagerTransactions/> : <Navigate to = "/manager/login"/> } />
-
+                    <Route path='/manager/chat' element={manager ? <ChatInterface bookingId= '6734231bb88edbf6e938a041' recipientId= '6734231bb88edbf6e938a041' recipientName= 'string' /> : <Navigate to = "/manager/login"/> } />
                 </Route>
             </Routes>
         </BrowserRouter>

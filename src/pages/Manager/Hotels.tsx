@@ -18,6 +18,7 @@ export default function Hotels() {
     (state: RootState) => state.hotelAuth
   );
   const { manager } = useSelector((state: RootState) => state.managerAuth);
+console.log(manager);
 
   useEffect(() => {
     if (manager && manager._id && manager.token) {

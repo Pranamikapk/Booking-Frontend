@@ -14,7 +14,7 @@ const handleApiError = (error: any) =>
   error.response?.data?.message || error.message || error.toString();
 
 const extractUserData = (userData: any): User => {
-  const { _id, name, email, phone ,role, isBlocked, isVerified, wallet } = userData._doc || userData;
+  const { _id, name, email, phone ,role, isBlocked, isVerified, wallet } = userData;
   return { _id, name, email, phone ,role, isBlocked, isVerified, wallet };
 };
 
@@ -28,16 +28,25 @@ const registerUser = async (userData: UserData): Promise<User> => {
 
 
 const loginUser = async (userData: UserData): Promise<User> => {
-  const response = await axios.post(`${API_URL}login`, userData);
-  const user = extractUserData(response.data);
-  localStorage.setItem('user', JSON.stringify(user));
-  console.log(user);
-  return user;
+  const response = await axios.post(`${API_URL}login`, userData,{ withCredentials: true });
+  console.log("Full API Response:", response); 
+
+  console.log("API Response Data:", response.data);
+
+  const { user, token } = response.data;
+
+  const userWithToken = {
+    ...user,
+    token,
+  };
+  localStorage.setItem('user', JSON.stringify(userWithToken));
+  console.log('user:',userWithToken);
+  return userWithToken;
 
 };
 
 const googleAuth = async (userData: string | null): Promise<User> => {
-  const response = await axios.post(`${API_URL}api/auth/google-login`, userData);
+  const response = await axios.post(`${API_URL}api/auth/google-login`, userData,{ withCredentials: true });
   const user = response.data.user;
   localStorage.setItem('user', JSON.stringify({ ...user, token: user.token }));
   return user;
@@ -58,7 +67,14 @@ const logoutUser = (): void => {
   localStorage.removeItem('user');
 };
 
-const authService = { registerUser, loginUser, googleAuth, updateUserProfile, getHotel, logoutUser };
+const refreshToken = async (): Promise<User> => {
+  const response = await axios.post(`${API_URL}refresh-token`, {}, { withCredentials: true });
+  const user = response.data.user;
+  localStorage.setItem('user', JSON.stringify(user));
+  return user;
+}
+
+const authService = { registerUser, loginUser, googleAuth, updateUserProfile, getHotel, logoutUser , refreshToken };
 
 interface AuthState {
   user: User | null;
@@ -138,8 +154,16 @@ export const fetchHotels = createAsyncThunk<Hotel[], void, { state: RootState; r
 );
 
 export const logout = createAsyncThunk('auth/logout', async () => {
-  authService.logoutUser();
+  await authService.logoutUser();
 });
+
+export const refreshtoken = createAsyncThunk('auth/refreshToken',async(_, thunkAPI) => {
+  try {
+    return await authService.refreshToken()
+  } catch (error) {
+    return thunkAPI.rejectWithValue(handleApiError(error));
+  }
+})
 
 export const authSlice = createSlice({
   name: 'auth',
@@ -168,6 +192,7 @@ export const authSlice = createSlice({
       })
       .addCase(login.pending, (state) => { state.isLoading = true; })
       .addCase(login.fulfilled, (state, action) => {
+        console.log('Login Successful - Payload:', action.payload);
         state.isLoading = false;
         state.isSuccess = true;
         state.user = action.payload;
@@ -212,10 +237,12 @@ export const authSlice = createSlice({
         state.isError = true;
         state.message = action.payload || 'Fetching hotels failed';
       })
-      .addCase(logout.fulfilled, (state) => { state.user = null; });
+      .addCase(logout.fulfilled, (state) => { state.user = null; })
+      .addCase(refreshtoken.rejected, (state) => {
+        state.user = null;
+      });
   }
 });
 
-// Export actions and reducer
 export const { reset } = authSlice.actions;
 export default authSlice.reducer;

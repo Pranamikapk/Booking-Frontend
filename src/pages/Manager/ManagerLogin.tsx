@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { AppDispatch, RootState } from '../../app/store';
 import ForgotPasswordModal from '../../components/modals/ForgotPasswordModal';
-import { login, reset } from '../../features/manager/managerSlice';
+import { loginThunk, reset } from '../../features/manager/managerSlice';
 
 interface ManagerCredentials {
   email: string;
@@ -89,7 +89,7 @@ const ManagerLogin: React.FC = () => {
       email,
       password
     };
-    const result = await dispatch(login(managerData)).unwrap();
+    const result = await dispatch(loginThunk(managerData)).unwrap();
     console.log(result);
 
     if (result && result.isBlocked) {
@@ -97,12 +97,12 @@ const ManagerLogin: React.FC = () => {
         className: 'toast-custom'
       });
     }
-    if (result.meta.requestStatus === 'rejected') {
-      setFormErrors((prevErrors) => ({
-        ...prevErrors,
-        password: 'Invalid credentials',
-      }));
-    }
+    // if (result === 'rejected') {
+    //   setFormErrors((prevErrors) => ({
+    //     ...prevErrors,
+    //     password: 'Invalid credentials',
+    //   }));
+    // }
   };
 
   const handleForgotPassword = () => {

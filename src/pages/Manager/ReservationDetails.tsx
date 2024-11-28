@@ -1,20 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { AppDispatch, RootState } from '../../app/store';
 import Spinner from '../../components/Spinner';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import CardContent from '../../components/ui/CardContent';
 import Modal from '../../components/ui/Modal';
-import { reservationDetails } from '../../features/booking/bookingSlice';
+import { approveCancellation, rejectCancellation, reservationDetails } from '../../features/booking/bookingSlice';
 import { Booking } from '../../types/bookingTypes';
-
 let API_URL = 'http://localhost:3000'
 
 const ReservationDetails: React.FC = () => {
   const { bookingId } = useParams<{ bookingId: string }>();
   const dispatch = useDispatch<AppDispatch>();
+  const token = useSelector((state: RootState)=>state.managerAuth.manager?.token)
   const { bookings, isLoading, isError } = useSelector((state: RootState) => state.booking);
   const [booking, setBooking] = useState<Booking | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -22,12 +23,11 @@ const ReservationDetails: React.FC = () => {
   const [currentImage, setCurrentImage] = useState('');
   const [cancellationRequest, setCancellationRequest] = useState<{ reason: string; status: string } | null>(null);
 
-console.log(bookings);
-
+console.log(booking);  
 
   useEffect(() => {
     if (bookingId) {
-      dispatch(reservationDetails({ bookingId }));
+      dispatch(reservationDetails({ bookingId: bookingId }));
     }
   }, [dispatch, bookingId]);
 
@@ -48,50 +48,24 @@ console.log(bookings);
     setIsModalOpen(false);
   };
   const handleApproveCancellation = async () => {
-    if (!booking || !booking._id) return;        
+    if (!booking || !booking._id) return;
     try {
-      const response = await fetch(`${API_URL}manager/cancel/${booking._id}/approve`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
+      await dispatch(approveCancellation({ bookingId: booking._id, token })).unwrap();
+      toast.success('Cancellation approved successfully',{
+        className: 'toast-custom',
       });
-      console.log(response);
-      
-      if (!response.ok) {
-        console.log('ddd');
-        
-        throw new Error('Failed to approve cancellation');
-      }
-      const updatedBooking = await response.json();
-      console.log(updatedBooking);
-      
-      setBooking(updatedBooking);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred while approving cancellation');
+    } catch (err : any) {
+      toast.error('Failed to approve cancellation');
     }
   };
 
   const handleRejectCancellation = async () => {
     if (!booking || !booking._id) return;
-    console.log('licked');
-    
     try {
-      const response = await fetch(`${API_URL}manager/cancel/${booking._id}/reject`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-      });
-      if (!response.ok) {
-        throw new Error('Failed to reject cancellation');
-      }
-      const updatedBooking = await response.json();
-      setBooking(updatedBooking);
+      await dispatch(rejectCancellation({ bookingId: booking._id, token })).unwrap();
+      toast.success('Cancellation rejected successfully');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred while rejecting cancellation');
+      toast.error('Failed to reject cancellation');
     }
   };
 
@@ -148,17 +122,17 @@ console.log(bookings);
                 </tr>
                 <tr>
                   <td className="border px-4 py-2 font-medium">Id Submitted</td>
-                  <td className="border px-4 py-2">{booking.userCredentials.idType || 'N/A'}</td>
+                  <td className="border px-4 py-2">{booking.userCredentials?.idType || 'N/A'}</td>
                 </tr>
                 <tr>
                   <td className="border px-4 py-2 font-medium">Id Image</td>
                   <td className="border px-4 py-2">
-                  {booking.userCredentials.idPhoto ? (
+                  {booking.userCredentials?.idPhoto ? (
                     <img
-                      src={booking.userCredentials.idPhoto}
+                      src={booking.userCredentials?.idPhoto}
                       alt="ID Document"
                       className="w-32 h-32 cursor-pointer border"
-                      onClick={() => handleImageClick(booking.userCredentials.idPhoto || '')}
+                      onClick={() => handleImageClick(booking.userCredentials?.idPhoto || '')}
                     />
                   ) : (
                     'No ID Photo'
@@ -231,17 +205,23 @@ console.log(bookings);
                     </tr>
                     <tr>
                       <td className="border px-4 py-2 font-medium">Reason</td>
-                      <td className="border px-4 py-2">{booking.cancellationRequest.reason}</td>
+                      <td className="border px-4 py-2">{booking.cancellationRequest.reason || 'No reason provided'}</td>
                     </tr>
                     <tr>
                       <td className="border px-4 py-2 font-medium">Status</td>
-                      <td className="border px-4 py-2">{booking.cancellationRequest.status}</td>
+                      <td className="border px-4 py-2">{booking.cancellationRequest.status || 'No reason provided'}</td>
                     </tr>
-                    {booking.status === 'cancellation_pending' && (
+                    {booking.status === 'Cancelled' && (
+                      <tr>
+                        <td className="border px-4 py-2 font-medium">Refund Amount</td>
+                        <td className="border px-4 py-2">₹{booking.amountPaid || 0}</td>
+                      </tr>
+                    )}
+                    {booking.status === 'Cancellation_pending' && (
                       <tr>
                         <td colSpan={2} className="border px-4 py-2">
                           <div className="flex justify-end space-x-4">
-                            <Button variant="primary" onClick={handleApproveCancellation}>Approve</Button>
+                            <Button onClick={handleApproveCancellation}>Approve</Button>
                             <Button variant="danger" onClick={handleRejectCancellation}>Reject</Button>
                           </div>
                         </td>

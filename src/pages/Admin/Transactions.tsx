@@ -11,6 +11,7 @@ const Transactions = () => {
       try {
         const response = await fetch(`${API_URL}/admin/transactions`);
         const data = await response.json();
+        console.log("Transactions:",data);
         setTransactions(data);
       } catch (error) {
         console.error("Error fetching admin transactions:", error);

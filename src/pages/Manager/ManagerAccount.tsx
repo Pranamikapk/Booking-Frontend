@@ -5,13 +5,15 @@ import { toast } from 'react-toastify';
 
 import { AppDispatch, RootState } from '../../app/store';
 import Spinner from '../../components/Spinner';
-import { logout, updateProfile } from '../../features/manager/managerSlice';
+import { logoutThunk } from '../../features/manager/managerSlice';
+import { updateProfile } from '../../features/user/authSlice';
 
 const ManagerAccount: React.FC = () => {
   const { manager, isLoading, isSuccess, isError, message } = useSelector((state: RootState) => state.managerAuth);
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-
+  console.log(manager);
+  
   const [name, setName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [phone, setPhone] = useState<string>('');
@@ -100,7 +102,7 @@ const ManagerAccount: React.FC = () => {
           {isLoading && <Spinner />}
           <button
             className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-full max-w-sm mt-4"
-            onClick={() => dispatch(logout())}
+            onClick={() => dispatch(logoutThunk())}
           >
             Logout
           </button>

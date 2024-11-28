@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AppDispatch, RootState } from '../../app/store';
-import { logout, reset } from '../../features/manager/managerSlice';
+import { logoutThunk, reset } from '../../features/manager/managerSlice';
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -18,7 +18,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const onLogout = () => {
-    dispatch(logout());
+    dispatch(logoutThunk());
     dispatch(reset());
     toast.success('Logged out successfully', {
       className: 'toast-custom',

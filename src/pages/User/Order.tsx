@@ -14,6 +14,7 @@ import { TripDetails } from '../../components/Booking/TripDetails'
 import Spinner from '../../components/Spinner'
 import Button from '../../components/ui/Button'
 import Card from '../../components/ui/Card'
+import { createBooking } from '../../features/booking/bookingSlice'
 
 
 interface LocationState {
@@ -59,6 +60,9 @@ export default function Order() {
     }
   }, [user, navigate])
 
+  console.log("User:",user);
+  
+
   const handlePaymentOptionChange = (option: 'full' | 'partial') => {
     setPaymentOption(option)
   }
@@ -84,116 +88,119 @@ export default function Order() {
       return
     }
 
+    if (!user._id) {
+      toast.error("User ID is missing. Please log in again.");
+      return;
+    }
+
     if (idPhotoUrls.length === 0) {
       toast.error("Please upload your ID photo(s)")
       return
     }
 
     try {
-      const isLoaded = await loadRazorpayScript()
-      if (!isLoaded) {
-        throw new Error("Failed to load Razorpay SDK")
-      }
-
-      const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY
-
       const bookingData = {
+        user: user._id,
+        userCredentials: {
+          name: user.name,
+          email: user.email,
+          phone: user.phone , 
+          idType,
+          idPhoto: idPhotoUrls[0],
+          idPhotoBack: idPhotoUrls[1] || null,  
+        },
         hotelId: hotel._id,
         checkInDate: checkIn,
         checkOutDate: checkOut,
-        guests: guests.toString(),
-        totalPrice: total.toString(),
-        idType,
-        idPhoto: idPhotoUrls[0],
-        idPhotoBack: idPhotoUrls[1] || null,
-        paymentOption
+        guests:  Number(guests),
+        totalPrice: Number (total),
+        paymentOption,
       }
-      console.log(bookingData);
+      console.log("BookingData:",bookingData);
       
-
-      const response = await fetch("http://localhost:3000/booking", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${user?.token}`,
-        },
-        body: JSON.stringify(bookingData),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || "Failed to create booking")
+      const resultAction = await dispatch(createBooking(bookingData))
+      if (createBooking.fulfilled.match(resultAction)) {
+        const orderData = resultAction.payload
+        await handlePayment(orderData)
+      } else if (createBooking.rejected.match(resultAction)) {
+        throw new Error(resultAction.payload || 'Failed to create booking')
       }
-
-      const orderData = await response.json()
-      if (!orderData || !orderData.orderId) {
-        throw new Error("Failed to create payment order")
-      }
-
-      let amountToPay = paymentOption === 'partial' ? total * 0.2 : total; 
-      console.log(amountToPay);
-      
-      if (paymentOption === 'partial') {
-        amountToPay = total * 0.2;
-      }
-
-      const options = {
-        key: razorpayKey,
-        amount: amountToPay * 100,
-        currency: "INR",
-        name: hotel.name,
-        description: "Hotel Booking Payment",
-        order_id: orderData.orderId,
-        handler: async (response: any) => {
-          try {
-            const verifyResponse = await fetch("http://localhost:3000/verifyPayment", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${user.token}`,
-              },
-              body: JSON.stringify({
-                razorpayOrderId: response.razorpay_order_id,
-                razorpayPaymentId: response.razorpay_payment_id,
-                razorpaySignature: response.razorpay_signature,
-                bookingId: orderData.booking._id,
-              }),
-            })
-
-            if (!verifyResponse.ok) {
-              throw new Error("Payment verification failed")
-            }
-
-            const verificationResult = await verifyResponse.json()
-            toast.success("Booking confirmed!")
-            navigate("/user/bookings", { state: { booking: verificationResult.booking } })
-          } catch (error) {
-            console.error("Payment verification error:", error)
-            toast.error("Payment verification failed. Please contact support.")
-          }
-        },
-        prefill: {
-          name: user.name,
-          email: user.email,
-          contact: phone,
-        },
-        theme: {
-          color: "#FF385C",
-        },
-      }
-
-      const rzp = new (window as any).Razorpay(options)
-      rzp.on("payment.failed", (response: any) => {
-        toast.error("Payment failed. Please try again.")
-        console.error(response.error)
-      })
-
-      rzp.open()
     } catch (error) {
       console.error("Error creating booking:", error)
       toast.error(error instanceof Error ? error.message : "Failed to create booking. Please try again.")
     }
   }
+
+  const handlePayment = async (orderData: any) => {
+    console.log("Insidee");
+    
+    const isLoaded = await loadRazorpayScript()
+    if (!isLoaded) {
+      console.log("Failed to load Razorpay SDK");
+      
+      throw new Error("Failed to load Razorpay SDK")
+    }
+
+    const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY
+    console.log("razorpayKey:",razorpayKey);
+    
+    let amountToPay = paymentOption === 'partial' ? total * 0.2 : total
+    console.log('amountToPay:',amountToPay);
+    
+    const options = {
+      key: razorpayKey,
+      amount: amountToPay * 100,
+      currency: "INR",
+      name: hotel?.name,
+      description: "Hotel Booking Payment",
+      order_id: orderData.orderId,
+      handler: async (response: any) => {
+        try {
+          const verifyResponse = await fetch("http://localhost:3000/verifyPayment", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${user?.token}`,
+            },
+            body: JSON.stringify({
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+              bookingId: orderData.booking._id,
+            }),
+          })
+
+          if (!verifyResponse.ok) {
+            throw new Error("Payment verification failed")
+          }
+
+          const verificationResult = await verifyResponse.json()
+          toast.success("Booking confirmed!")
+          navigate("/user/bookings", { state: { booking: verificationResult.booking } })
+        } catch (error) {
+          console.error("Payment verification error:", error)
+          toast.error("Payment verification failed. Please contact support.")
+        }
+      },
+      prefill: {
+        name: user?.name,
+        email: user?.email,
+        contact: phone,
+      },
+      theme: {
+        color: "#FF385C",
+      },
+    }
+
+    const rzp = new (window as any).Razorpay(options)
+    rzp.on("payment.failed", (response: any) => {
+      toast.error("Payment failed. Please try again.")
+      console.error(response.error)
+    })
+    console.log("Opening Razorpay modal...");
+    rzp.open();
+  }
+    
 
   if (!user || !hotel) {
     return <Spinner />
