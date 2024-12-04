@@ -36,7 +36,7 @@ export default function Order() {
   const { user } = useSelector((state: RootState) => state.auth)
   const { hotel } = useSelector((state: RootState) => state.hotel)
 
-  const [paymentOption, setPaymentOption] = useState<'full' | 'partial'>('full')
+  const [paymentOption, setPaymentOption] = useState<'full' | 'partial' | 'wallet'>('full')
   const [idPhotoUrls, setIdPhotoUrls] = useState<string[]>([])
   const [phone, setPhone] = useState('')
   const [idType, setIdType] = useState('')
@@ -63,7 +63,7 @@ export default function Order() {
   console.log("User:",user);
   
 
-  const handlePaymentOptionChange = (option: 'full' | 'partial') => {
+  const handlePaymentOptionChange = (option: 'full' | 'partial' | 'wallet') => {
     setPaymentOption(option)
   }
 
@@ -121,13 +121,44 @@ export default function Order() {
       const resultAction = await dispatch(createBooking(bookingData))
       if (createBooking.fulfilled.match(resultAction)) {
         const orderData = resultAction.payload
-        await handlePayment(orderData)
+        if (paymentOption === 'wallet') {
+          await handleWalletPayment(orderData)
+        } else {
+          await handlePayment(orderData)
+        }
       } else if (createBooking.rejected.match(resultAction)) {
         throw new Error(resultAction.payload || 'Failed to create booking')
       }
     } catch (error) {
       console.error("Error creating booking:", error)
       toast.error(error instanceof Error ? error.message : "Failed to create booking. Please try again.")
+    }
+  }
+
+  const handleWalletPayment = async (orderData: any) => {
+    try {
+      const response = await fetch("http://localhost:3000/walletPayment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user?.token}`,
+        },
+        body: JSON.stringify({
+          bookingId: orderData.booking._id,
+          amount: total,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Wallet payment failed")
+      }
+
+      const result = await response.json()
+      toast.success("Booking confirmed!")
+      navigate("/user/bookings", { state: { booking: result.booking } })
+    } catch (error) {
+      console.error("Wallet payment error:", error)
+      toast.error("Wallet payment failed. Please try again or choose a different payment method.")
     }
   }
 
@@ -236,6 +267,7 @@ export default function Order() {
             <PaymentOptions
               paymentOption={paymentOption}
               total={total}
+              walletBalance = {user.wallet || 0}
               handlePaymentOptionChange={handlePaymentOptionChange}
             />
 

@@ -9,27 +9,7 @@ const API_URL = 'http://localhost:3000'
 
 const AdminDashboard: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
-
-  useEffect(() => {
-    const loadStats = async () => {
-      try {
-        const response = await axios.get(`${API_URL}/admin/stats`);
-        setStats(response.data);
-        console.log(response.data);
-        
-      } catch (error) {
-        console.error('Error fetching dashboard stats:', error);
-      }
-    };
-
-    loadStats();
-  }, []);
-
-  if (!stats) {
-    return <div><Spinner/></div>;
-  }
-
-  const chartOptions: ApexOptions = {
+  const [chartOptions, setChartOptions] = useState<ApexOptions>({
     chart: {
       type: 'area',
       height: 350,
@@ -41,10 +21,45 @@ const AdminDashboard: React.FC = () => {
     xaxis: {
       categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
     },
-    yaxis: { title: { text: 'Number of Bookings' } },
+    yaxis: { 
+      title: { text: 'Number of Bookings' },
+      min: 0,
+    },
+  });
+  const [chartSeries, setChartSeries] = useState<ApexAxisChartSeries>([
+    { name: 'Bookings', data: [] }
+  ]);
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const response = await axios.get<DashboardStats>(`${API_URL}/admin/stats`);
+        setStats(response.data);
+        console.log(response.data);
+        
+        updateChartData(response.data.monthlyBookings);
+      } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+      }
+    };
+
+    loadStats();
+  }, []);
+
+  const updateChartData = (monthlyBookings: number[]) => {
+    setChartSeries([{ name: 'Bookings', data: monthlyBookings }]);
+    setChartOptions(prevOptions => ({
+      ...prevOptions,
+      yaxis: {
+        ...prevOptions.yaxis,
+        max: Math.max(...monthlyBookings, 1) + 1,
+      },
+    }));
   };
 
-  const chartSeries = [{ name: 'Bookings', data: stats.monthlyBookings }];
+  if (!stats) {
+    return <div><Spinner/></div>;
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -58,7 +73,12 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       <div className="bg-white shadow-md rounded-lg p-6 mb-8">
-        <ReactApexChart options={chartOptions} series={chartSeries} type="area" height={350} />
+        <ReactApexChart 
+          options={chartOptions} 
+          series={chartSeries} 
+          type="area" 
+          height={350} 
+        />
       </div>
 
       <RecentActivity activities={stats.recentActivity} />

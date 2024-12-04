@@ -11,4 +11,18 @@ export interface DashboardStats {
     }>;
   }
   
+  export interface ManagerDashboardStats {
+    totalHotels: number;
+    totalBookings: number;
+    totalRevenue: number;
+    occupancyRate: number;
+    monthlyRevenue: number[];
+    recentBookings: Array<{
+      id: string;
+      guestName: string;
+      checkIn: string;
+      checkOut: string;
+      status: string;
+    }>;
+  }
   

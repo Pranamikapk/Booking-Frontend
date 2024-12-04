@@ -53,9 +53,6 @@ export default function BookingDetails() {
       fetchBookingDetails();
     }
   }, [bookingId]);
-console.log(bookingId);
-console.log(booking);
-
 
   const handleCancelBookingRequest = async () => {
     if (!bookingId) return;
@@ -242,7 +239,7 @@ console.log(booking);
               {booking.status === 'cancellation_pending' ? 'Cancellation Pending' : 'Cancel Booking'}
             </Button>
           )}
-          <Button variant='primary' onClick={()=>navigate('/chat')} disabled={booking.status === 'cancellation_pending'}
+          <Button variant='primary' onClick={()=>navigate(`/chat/${booking._id}`)} disabled={booking.status === 'cancellation_pending'}
           >Message</Button>
         </div>
       </div>

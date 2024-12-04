@@ -32,7 +32,7 @@ export default function Account(): React.JSX.Element | null {
       setEmail(storedUser.email)
       setPhone(storedUser.phone || '')
     }
-  }, [])
+  }, [user])
 
   let { subpage } = useParams()
   if (subpage === undefined) {
@@ -105,7 +105,7 @@ export default function Account(): React.JSX.Element | null {
               <h2 className="text-2xl font-bold ">Profile</h2>
               <div className="flex items-center space-x-2 bg-gray-100 p-3 rounded-lg shadow-lg">
                 <Wallet className="text-primary" />
-                <span className="text-lg font-semibold">Wallet Balance: ₹ { user.wallet.toFixed(2)}</span>
+                <span className="text-lg font-semibold">Wallet Balance: ₹ {user?.wallet ? user.wallet.toFixed(2) : '0.00'}</span>
               </div>
             </div>
             <div className="p-6 flex flex-col md:flex-row">

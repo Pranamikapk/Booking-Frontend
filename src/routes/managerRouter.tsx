@@ -1,13 +1,14 @@
 import React from "react"
 import { useSelector } from "react-redux"
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom"
+import { RootState } from "../app/store"
 import ManagerLayout from "../layouts/ManagerLayout"
 import AddHotel from "../pages/Manager/AddHotel"
-import ChatInterface from "../pages/Manager/Chat/ChatInterface"
 import EditHotel from "../pages/Manager/EditHotel"
 import HotelDetails from "../pages/Manager/HotelDetails"
 import Hotels from "../pages/Manager/Hotels"
 import ManagerAccount from "../pages/Manager/ManagerAccount"
+import ManagerChat from "../pages/Manager/ManagerChat"
 import ManagerDashboard from "../pages/Manager/ManagerDashboard"
 import ManagerLogin from "../pages/Manager/ManagerLogin"
 import ManagerRegister from "../pages/Manager/ManagerRegister"
@@ -16,7 +17,7 @@ import ReservationDetails from "../pages/Manager/ReservationDetails"
 import Reservations from "../pages/Manager/Reservations"
 
 const ManagerRouter = () => {
-    const {manager} = useSelector((state:any)=>state.managerAuth || localStorage.getItem('manager'))
+    const {manager} = useSelector((state: RootState)=>state.managerAuth || localStorage.getItem('manager'))
 
     return(
         <BrowserRouter>
@@ -33,7 +34,7 @@ const ManagerRouter = () => {
                     <Route path='/manager/reservations' element={manager ? <Reservations/> : <Navigate to = "/manager/login"/> } />
                     <Route path='/manager/reservations/:bookingId' element={manager ? <ReservationDetails/> : <Navigate to = "/manager/login"/> } />
                     <Route path='/manager/transactions' element={manager ? <ManagerTransactions/> : <Navigate to = "/manager/login"/> } />
-                    <Route path='/manager/chat' element={manager ? <ChatInterface bookingId= '6734231bb88edbf6e938a041' recipientId= '6734231bb88edbf6e938a041' recipientName= 'string' /> : <Navigate to = "/manager/login"/> } />
+                    <Route path='/manager/chat' element={manager ? <ManagerChat managerId={manager._id} /> : <Navigate to = "/manager/login"/> } />
                 </Route>
             </Routes>
         </BrowserRouter>

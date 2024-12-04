@@ -1,138 +1,153 @@
-import { format } from 'date-fns';
-import { Send } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useParams } from 'react-router-dom';
+import io from 'socket.io-client';
 import { RootState } from '../../app/store';
-import Card from '../../components/ui/Card';
-import CardContent from '../../components/ui/CardContent';
-import Input from '../../components/ui/Input';
-import { Message } from '../../types/chatTypes';
+import ChatWindow from '../../components/Chat/ChatWindow';
+import Spinner from '../../components/Spinner';
 
-interface ChatInterfaceProps {
-  bookingId: string;
-  recipientId: string;
-  recipientName: string;
+const socket = io('http://localhost:3000', { autoConnect: false });
+
+interface IMessage {
+  _id: string;
+  sender: string;
+  content: string;
+  timestamp: string;
+  chatId: string;
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({
-  bookingId,
-  recipientId,
-  recipientName,
-}) => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [isSending, setIsSending] = useState(false); 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+interface IChat {
+  _id: string;
+  manager: string;
+  user: string;
+  hotelId: string;
+  bookingId: string;
+  messages: IMessage[];
+}
+
+const UserChat: React.FC = () => {
+  const { bookingId } = useParams<{ bookingId: string }>();
+  const [chat, setChat] = useState<IChat | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { user } = useSelector((state: RootState) => state.auth);
-  const API_URL = 'http://localhost:3000/manager/';
+  const API_URL = 'http://localhost:3000/';
+
+  const handleNewMessage = useCallback((message: IMessage) => {
+    setChat((prevChat) => {
+      if (prevChat && prevChat._id === message.chatId) {
+        const alreadyExists = prevChat.messages.some((msg) => msg._id === message._id);
+        if (!alreadyExists) {
+          return { 
+            ...prevChat, 
+            messages: [
+              ...prevChat.messages, 
+              { ...message, timestamp: message.timestamp || new Date().toISOString() }
+            ]
+          };
+        }
+      }
+      return prevChat;
+    });
+  }, []);
 
   useEffect(() => {
-    const fetchMessages = async () => {
+    const fetchChat = async () => {
+      if (!user?.token || !bookingId) return;
+
       try {
-        const response = await fetch(`${API_URL}chat/${bookingId}`, {
-          credentials: 'include',
+        const response = await fetch(`${API_URL}${bookingId}`, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
         });
-        if (!response.ok) throw new Error('Failed to fetch messages');
+
+        if (!response.ok) throw new Error('Failed to fetch chat data');
         const data = await response.json();
-        setMessages(data);
+        setChat(data);
+
+        socket.connect();
+        socket.emit('join chat', {
+          userId: user._id,
+          managerId: data.manager,
+          bookingId: data.bookingId,
+        });
+
+        socket.on('new message', handleNewMessage);
       } catch (error) {
-        console.error('Error fetching messages:', error);
+        console.error('Error fetching chat data:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    fetchMessages();
-    const interval = setInterval(fetchMessages, 5000); 
+    fetchChat();
 
-    return () => clearInterval(interval);
-  }, [bookingId]);
+    return () => {
+      socket.off('new message', handleNewMessage);
+      socket.disconnect();
+    };
+  }, [user, bookingId, handleNewMessage]);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  const handleSendMessage = async (content: string) => {
+    if (!chat || !content.trim() || !user?._id) return;
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim()) return;
-
-    setIsSending(true); 
     try {
-      const response = await fetch(`${API_URL}chat/send`, {
+      const response = await fetch(`${API_URL}send`, {
         method: 'POST',
         headers: {
+          Authorization: `Bearer ${user.token}`,
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
-        body: JSON.stringify({
-          content: newMessage,
-          receiver: recipientId,
-          bookingId,
+        body: JSON.stringify({ 
+          content,
+          sender: user._id,
+          receiver: chat.manager,
+          bookingId: chat.bookingId,
         }),
       });
 
       if (!response.ok) throw new Error('Failed to send message');
+      const sentMessage: IMessage = await response.json();
 
-      const message = await response.json();
-      setMessages((prevMessages) => [...prevMessages, message]); 
-      setNewMessage('');
+      const newMessage: IMessage = {
+        _id: sentMessage._id,
+        sender: sentMessage.sender,
+        content: sentMessage.content,
+        timestamp: sentMessage.timestamp || new Date().toISOString(),
+        chatId: chat._id,
+      };
+
+      setChat((prevChat) => {
+        if (!prevChat) return null;
+        return {
+          ...prevChat,
+          messages: [...prevChat.messages, newMessage],
+        };
+      });
+      
+      socket.emit('send message', { chatId: chat._id, message: newMessage });
     } catch (error) {
       console.error('Error sending message:', error);
-    } finally {
-      setIsSending(false);
     }
   };
 
+  if (isLoading) return <Spinner />;
+
   return (
-    <Card className="h-[600px] flex flex-col">
-      <div className="bg-primary p-4 text-white">
-        <h2 className="text-lg font-semibold">{recipientName}</h2>
-      </div>
-
-      <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message) => (
-          <div
-            key={message._id}
-            className={`flex ${message.sender === user?._id ? 'justify-end' : 'justify-start'}`}
-          >
-            <div
-              className={`max-w-[70%] rounded-lg p-3 ${
-                message.sender === user?._id ? 'bg-primary text-white' : 'bg-gray-100'
-              }`}
-            >
-              <p className="break-words">{message.content}</p>
-              <p
-                className={`text-xs mt-1 ${
-                  message.sender === user?._id ? 'text-primary-foreground/70' : 'text-muted-foreground'
-                }`}
-              >
-                {format(new Date(message.timestamp), 'HH:mm')}
-              </p>
-            </div>
-          </div>
-        ))}
-        <div ref={messagesEndRef} />
-      </CardContent>
-
-      <form onSubmit={handleSendMessage} className="p-4 border-t">
-        <div className="flex gap-2 items-center">
-          <Input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type a message..."
-            className="flex-1"
-            disabled={isSending} 
-          />
-          <button
-            type="submit"
-            className="p-2 w-11 h-13 bg-primary rounded-lg flex items-center justify-center"
-            disabled={isSending} 
-          >
-            <Send className={`h-5 w-5 ${isSending ? 'opacity-50' : ''}`} />
-          </button>
-        </div>
-      </form>
-    </Card>
+    <div className="flex flex-col h-screen bg-gray-100">
+      {chat ? (
+        <ChatWindow
+          chat={chat}
+          currentUserId={user?._id || ''}
+          onSendMessage={handleSendMessage}
+        />
+      ) : (
+        <div className="text-center p-4">Chat data not available.</div>
+      )}
+    </div>
   );
 };
 
-export default ChatInterface;
+export default UserChat;
+

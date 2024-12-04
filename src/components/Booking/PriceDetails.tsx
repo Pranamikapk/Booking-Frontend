@@ -12,7 +12,7 @@ interface PriceDetailsProps {
   cleaningFee?: number
   serviceFee: number
   total: number
-  paymentOption: 'full' | 'partial'
+  paymentOption: 'full' | 'partial' | 'wallet'
 }
 
 export const PriceDetails: React.FC<PriceDetailsProps> = ({
@@ -28,7 +28,7 @@ export const PriceDetails: React.FC<PriceDetailsProps> = ({
   paymentOption,
 }) => {
   const adjustedTotal = total
-  const amountDue = paymentOption === 'full' ? adjustedTotal : adjustedTotal * 0.2
+  const amountDue = paymentOption === 'full' || paymentOption === 'wallet' ? adjustedTotal : adjustedTotal * 0.2
 
   return (
     <Card className="lg:sticky lg:top-8">
@@ -101,6 +101,13 @@ export const PriceDetails: React.FC<PriceDetailsProps> = ({
                 <span>₹{(adjustedTotal - amountDue).toFixed(2)}</span>
               </div>
             </>
+          )}
+
+          {paymentOption === 'wallet' && (
+            <div className="flex justify-between text-green-600 font-medium">
+              <span>Paying from wallet</span>
+              <span>₹{amountDue.toFixed(2)}</span>
+            </div>
           )}
         </div>
 

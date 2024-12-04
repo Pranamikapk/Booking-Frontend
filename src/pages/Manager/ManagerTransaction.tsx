@@ -9,6 +9,7 @@ const ManagerTransactions = () => {
   const [transactions, setTransactions] = useState([]);
   const [error,setError] = useState('')
   const token = useSelector((state: RootState)=> state.managerAuth.manager?.token)
+console.log(transactions);
 
   useEffect(() => {
     const fetchTransactions = async () => {

@@ -2,12 +2,14 @@ import React from "react"
 import Card from "../ui/Card"
 
 interface PaymentOptionsProps {
-  paymentOption: 'full' | 'partial'
+  paymentOption: 'full' | 'partial' | 'wallet'
   total: number
-  handlePaymentOptionChange: (option: 'full' | 'partial') => void
+  walletBalance: number
+  handlePaymentOptionChange: (option: 'full' | 'partial' | 'wallet') => void
 }
 
-const PaymentOptions: React.FC<PaymentOptionsProps> = ({ paymentOption, total, handlePaymentOptionChange }) => {
+const PaymentOptions: React.FC<PaymentOptionsProps> = ({ paymentOption, total, walletBalance, handlePaymentOptionChange }) => {
+  const showWalletOption = walletBalance > 0
   return (
     <Card className="p-6">
       <h2 className="text-xl font-semibold mb-4">Payment Options</h2>
@@ -30,6 +32,17 @@ const PaymentOptions: React.FC<PaymentOptionsProps> = ({ paymentOption, total, h
           />
           <span>Pay 20% now (₹{(total * 0.2).toFixed(2)})</span>
         </label>
+        {showWalletOption && (
+          <label className="flex items-center space-x-3">
+            <input
+              type="radio"
+              checked={paymentOption === 'wallet'}
+              onChange={() => handlePaymentOptionChange('wallet')}
+              className="form-radio"
+            />
+            <span>Pay from wallet (Balance: ₹{walletBalance.toFixed(2)})</span>
+          </label>
+        )}
       </div>
     </Card>
   )
