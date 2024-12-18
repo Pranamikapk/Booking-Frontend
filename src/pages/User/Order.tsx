@@ -260,6 +260,7 @@ export default function Order() {
               guests={guests}
               rooms={hotel.rooms?.bedrooms || 0}
               amenities={hotel.amenities || []}
+              hotelId= {hotel._id}
             />
 
             <IDUpload onUploadComplete={handleUploadComplete} />

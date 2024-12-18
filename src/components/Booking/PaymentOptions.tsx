@@ -9,7 +9,7 @@ interface PaymentOptionsProps {
 }
 
 const PaymentOptions: React.FC<PaymentOptionsProps> = ({ paymentOption, total, walletBalance, handlePaymentOptionChange }) => {
-  const showWalletOption = walletBalance > 0
+  const showWalletOption = walletBalance > 0 && walletBalance >= total
   return (
     <Card className="p-6">
       <h2 className="text-xl font-semibold mb-4">Payment Options</h2>

@@ -16,6 +16,7 @@ const SideBar: React.FC<SideBarProps> = ({ isOpen, toggleSidebar }) => {
     { to: "/manager", label: "Dashboard" },
     { to: "/manager/hotels", label: "Hotels" },
     { to: "/manager/reservations", label: "Reservations" },
+    { to: "/manager/cancellationRequests", label:"Cancellation Requests"},
     { to: "/manager/chat", label: "Inbox" },
     { to: "/manager/transactions", label: "Transactions" },
   ]
@@ -24,9 +25,9 @@ const SideBar: React.FC<SideBarProps> = ({ isOpen, toggleSidebar }) => {
     <>
       <aside
         className={`
-          fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
+            fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-          md:relative md:translate-x-0
+          md:relative md:translate-x-0 bg-transparent
         `}
       >
         <div className="flex items-center justify-between p-4 border-b">
@@ -37,7 +38,7 @@ const SideBar: React.FC<SideBarProps> = ({ isOpen, toggleSidebar }) => {
         </div>              
         <button
             onClick={toggleSidebar}
-            className="md:hidden text-gray-500 hover:text-gray-600 focus:outline-none focus:text-gray-600"
+            className="md:hidden text-gray-500 hover:text-gray-600 focus:outline-none focus:text-gray-600 bg-transparent"
             aria-label="Close sidebar"
           >
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -52,7 +53,7 @@ const SideBar: React.FC<SideBarProps> = ({ isOpen, toggleSidebar }) => {
               <li key={item.to} className="mb-4"> 
                 <Link
                   to={item.to}
-                  className="block px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition duration-150 ease-in-out"
+                  className="block px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition duration-150 ease-in-out "
                   onClick={() => toggleSidebar()}
                 >
                   {item.label}

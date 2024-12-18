@@ -25,8 +25,6 @@ const registerUser = async (userData: UserData): Promise<User> => {
   return user;
 };
 
-
-
 const loginUser = async (userData: UserData): Promise<User> => {
   const response = await axios.post(`${API_URL}login`, userData,{ withCredentials: true });
   console.log("Full API Response:", response); 

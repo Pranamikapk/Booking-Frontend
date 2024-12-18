@@ -1,24 +1,35 @@
 import React, { useEffect, useRef } from 'react';
+import { IChat } from '../../types/chatTypes';
 import ChatInput from './ChatInput';
 
 interface ChatWindowProps {
   chat: IChat;
   currentUserId: string;
   onSendMessage: (content: string) => void;
+  userName: string
 }
 
-const ChatWindow: React.FC<ChatWindowProps> = ({ chat, currentUserId, onSendMessage }) => {
+const ChatWindow: React.FC<ChatWindowProps> = ({ chat, currentUserId, onSendMessage ,userName }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chat.messages]);
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (inputRef.current && inputRef.current.value.trim()) {
+      onSendMessage(inputRef.current.value);
+      inputRef.current.value = '';
+    }
+  }
+
   return (
     <div className="flex flex-col h-full">
       <div className="bg-primary text-white p-4">
         <h2 className="text-xl font-bold">
-          Chat with {currentUserId === chat.manager ? chat.user : chat.manager}
+          {userName}
         </h2>
         <p className="text-sm">Booking #{chat.bookingId}</p>
       </div>

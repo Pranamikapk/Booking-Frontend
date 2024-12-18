@@ -12,10 +12,11 @@ import PlaceType from './AddHotel/PlaceType';
 import Price from './AddHotel/Price';
 import PropertyType from './AddHotel/PropertyType';
 import Room from './AddHotel/Room';
+import RoomCategories from './AddHotel/RoomCategory';
 
 const AddHotel = () => {
     const dispatch = useDispatch<AppDispatch>()
-    const {propertyType, placeType, address, rooms, amenities, name, description, photos, price, step, isLoading, isSuccess, isError, message } = useSelector(
+    const {propertyType, placeType, roomCategories, address, rooms, amenities, name, description, photos, price, step, isLoading, isSuccess, isError, message } = useSelector(
         (state : RootState) => state.hotelAuth
     )
     const navigate = useNavigate()
@@ -40,26 +41,45 @@ const AddHotel = () => {
                 }
                 break;
             case 2: 
-                if (!address.city || !address.state || !address.country || !address.postalCode) {
-                    stepErrors.address = "All address fields are required";
+                if (placeType === 'Room' || placeType === 'Shared Space') {
+                    if (!roomCategories || roomCategories.length === 0) {
+                        console.log("All required");
+                        
+                    stepErrors.roomCategories = "At least one room category is required";
                     isValid = false;
+                    } else {
+                    const invalidCategories = roomCategories.some(
+                        cat => !cat.name || cat.capacity < 1 || cat.quantity < 1 || cat.rate < 0
+                    );
+                    if (invalidCategories) {
+                        console.log("Invalid");
+                        
+                        stepErrors.roomCategories = "All room categories must have valid details";
+                        isValid = false;
+                    }
+                    }
+                } else {
+                    if ((rooms?.guests ?? 0) < 1 || (rooms?.bedrooms ?? 0) < 1 || (rooms?.bathrooms ?? 0) < 1) {
+                    stepErrors.rooms = "Invalid room configuration";
+                    isValid = false;
+                    }
                 }
                 break;
             case 3: 
-                if (rooms.guests < 1  || rooms.bedrooms < 1 || rooms.bathrooms < 1) {
-                    stepErrors.rooms = "Invalid room configuration";
-                    isValid = false;
-                }
-                break;
-            case 4: 
                 if (amenities.length === 0) {
                     stepErrors.amenities = "At least one amenity is required";
                     isValid = false;
                 }
                 break;
-            case 5: 
+            case 4: 
                 if (!name || !description || photos.length === 0) {
                     stepErrors.photo = "Name, description, and at least one photo are required";
+                    isValid = false;
+                }
+                break;
+            case 5: 
+                if (!address.city || !address.state || !address.country || !address.postalCode) {
+                    stepErrors.address = "All address fields are required";
                     isValid = false;
                 }
                 break;
@@ -75,10 +95,12 @@ const AddHotel = () => {
         setIsFormValid(isValid);
         return isValid;
     };
+console.log(errors);
 
     const nextStep = () => {
         if (validateStep(step)) {
-            dispatch(updateFormData({step : step + 1}));
+            const nextStepIndex = (placeType === 'Room' || placeType === 'Shared Space') && step === steps.length - 2 ? step + 2 : step + 1;
+            dispatch(updateFormData({ step: nextStepIndex }));
         }
     };
 
@@ -94,6 +116,7 @@ const AddHotel = () => {
             const formData: HotelFormState = {
                 propertyType,
                 placeType,
+                roomCategories,
                 address,
                 rooms,
                 amenities,
@@ -131,6 +154,29 @@ const AddHotel = () => {
     const steps = [
         <PropertyType formData={{propertyType}} handleChange={handleChange} errors={errors} />,
         <PlaceType formData={{placeType}} handleChange={handleChange} errors={errors} />,
+            placeType === 'Room' || placeType === 'Shared Space' ? (
+        <RoomCategories 
+            formData={{ roomCategories }}
+            handleChange={(data) => handleChange({ roomCategories: data.roomCategories })} 
+            errors={errors}
+            />
+          ) : (
+            <Room 
+              formData={{
+                rooms: {
+                  guests: rooms.guests || 1,
+                  bedrooms: rooms.bedrooms || 0,
+                  bathrooms: rooms.bathrooms || 0,
+                  diningrooms: rooms.diningrooms || 0,
+                  livingrooms: rooms.livingrooms || 0
+                }
+              }} 
+              handleChange={handleChange} 
+              errors={errors} 
+            />
+          ),
+        <Amenities formData={{amenities}} handleChange={handleChange} errors={errors} />,
+        <Photo formData={{name ,description ,photos }} handleChange={handleChange} errors={errors} />,
         <Address formData={{
             address: {
                 city: address?.city || '',
@@ -139,17 +185,9 @@ const AddHotel = () => {
                 postalCode: address?.postalCode || ''
             }
         }} handleChange={handleChange} errors={errors} />,
-        <Room formData={{
-            rooms:{
-                guests : rooms.guests || 1 ,
-                bedrooms:  rooms.bedrooms || 0,
-                bathrooms: rooms.bathrooms || 0,
-                diningrooms: rooms.diningrooms || 0,
-                livingrooms: rooms.livingrooms || 0
-            }}} handleChange={handleChange} errors={errors} />,
-        <Amenities formData={{amenities}} handleChange={handleChange} errors={errors} />,
-        <Photo formData={{name ,description ,photos }} handleChange={handleChange} errors={errors} />,
-        <Price formData={{price}} handleChange={handleChange} errors={errors} />
+        ...(placeType !== 'Room' && placeType !== 'Shared Space' ? [
+            <Price formData={{ price }} handleChange={handleChange} errors={errors} />
+        ] : [])    
     ];
 
     return (
@@ -167,7 +205,7 @@ const AddHotel = () => {
                 {step < steps.length - 1 && (
                     <Button 
                         onClick={nextStep} 
-                        disabled={!isFormValid}
+                        disabled={!isFormValid || Object.keys(errors).length > 0}
                         className="ml-auto"
                     >
                         Next

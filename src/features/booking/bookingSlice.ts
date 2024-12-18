@@ -173,9 +173,9 @@ export const approveCancellation = createAsyncThunk(
 
 export const rejectCancellation = createAsyncThunk(
   'booking/rejectCancellation',
-  async ({ bookingId, token }: { bookingId: string; token?: string }, { rejectWithValue }) => {
+  async ({ bookingId, token , reason }: { bookingId: string; token?: string ; reason: string }, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${API_URL}manager/cancel/${bookingId}/reject`, {}, {
+      const response = await axios.post(`${API_URL}manager/cancel/${bookingId}/reject`, {reason}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       return response.data;

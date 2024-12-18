@@ -60,7 +60,7 @@ const SearchCard: React.FC<SearchCardProps> = ({ states }) => {
             placeholder="Check in"
             value={checkInDate}
             onChange={(e) => setCheckInDate(e.target.value)}
-            min={checkInDate}
+            min={today}
             className="mr-2 w-full sm:w-auto"
           />
           <Input
@@ -68,7 +68,7 @@ const SearchCard: React.FC<SearchCardProps> = ({ states }) => {
             placeholder="Check out"
             value={checkOutDate}
             onChange={(e) => setCheckOutDate(e.target.value)}
-            min={checkOutDate}
+            min={checkInDate || today}
             className="w-full sm:w-auto"
           />
         </div>

@@ -19,9 +19,17 @@ const HotelCard: React.FC<HotelCardProps> = ({ hotel }) => {
           alt={hotel.name}
           className="w-full h-full object-cover"
         />
-        <div className="absolute bottom-2 right-2 bg-white px-2 py-1 rounded-full text-sm font-semibold">
-          ₹{hotel.price || 'N/A'}
+        
+       { 
+       hotel.price === 0 ? (
+       <div className="absolute bottom-2 right-2 bg-white px-2 py-1 rounded-full text-sm font-semibold">
+          View Price
         </div>
+         ): 
+        <div className="absolute bottom-2 right-2 bg-white px-2 py-1 rounded-full text-sm font-semibold">
+          ₹{hotel.price}
+        </div>
+      }
       </div>
       <CardContent className="p-4">
         <h2 className="text-xl font-bold mb-2 truncate">{hotel.name}</h2>

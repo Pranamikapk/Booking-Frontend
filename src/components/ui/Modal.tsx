@@ -31,7 +31,8 @@ const Modal = ({ isOpen, children, onClose }) => {
         <button onClick={onClose} style={{
           position: 'absolute',
           top: '10px',
-          right: '10px',
+          right: '-190px',
+          transform: 'translateX(0)', 
           background: 'transparent',
           border: 'none',
           fontSize: '1.5rem',
@@ -44,4 +45,4 @@ const Modal = ({ isOpen, children, onClose }) => {
   );
 };
 
-export default Modal;
+export default Modal

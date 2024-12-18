@@ -31,7 +31,7 @@ const initialState: HotelState = {
     error: null,
     sortBy: 'recommended',
     filters: {
-        priceRange: [500, 9000],
+        priceRange: [0, 9000],
         amenities: [],
         guestCount: 1,
         state : '',
@@ -150,13 +150,16 @@ const applyFilters = (hotels: Hotel[], state: HotelState) => {
             const matchesSearch = hotel.name.toLowerCase().includes(state.search.toLowerCase());
             const matchesState = state.filters.state 
                 ? hotel.address?.state?.toLowerCase() === state.filters.state.toLowerCase() 
-                : true;            
+                : true;     
+
             const isMatching = matchesSearch || matchesState;
             const hotelPrice = hotel.price ?? Infinity;
             const inPriceRange = hotelPrice >= state.filters.priceRange[0] && hotelPrice <= state.filters.priceRange[1];
             const hasAmenities = state.filters.amenities.every((amenity) => hotel.amenities.includes(amenity));
             const guestCapacity = hotel.rooms?.guests ?? 0;
             const hasCapacity = guestCapacity >= state.filters.guestCount;
+
+            
             return isMatching && inPriceRange && hasAmenities && hasCapacity;
         })
         .sort((a, b) => {

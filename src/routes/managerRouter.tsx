@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom"
 import { RootState } from "../app/store"
 import ManagerLayout from "../layouts/ManagerLayout"
 import AddHotel from "../pages/Manager/AddHotel"
+import Cancellation from "../pages/Manager/Cancellation"
 import EditHotel from "../pages/Manager/EditHotel"
 import HotelDetails from "../pages/Manager/HotelDetails"
 import Hotels from "../pages/Manager/Hotels"
@@ -33,6 +34,7 @@ const ManagerRouter = () => {
                     <Route path='/manager/hotel/:hotelId/edit' element={manager ? <EditHotel/> : <Navigate to = "/manager/login"/>} />
                     <Route path='/manager/reservations' element={manager ? <Reservations/> : <Navigate to = "/manager/login"/> } />
                     <Route path='/manager/reservations/:bookingId' element={manager ? <ReservationDetails/> : <Navigate to = "/manager/login"/> } />
+                    <Route path='/manager/cancellationRequests' element={manager ? <Cancellation/> : <Navigate to = "/manager/login"/> } />
                     <Route path='/manager/transactions' element={manager ? <ManagerTransactions/> : <Navigate to = "/manager/login"/> } />
                     <Route path='/manager/chat' element={manager ? <ManagerChat managerId={manager._id} /> : <Navigate to = "/manager/login"/> } />
                 </Route>

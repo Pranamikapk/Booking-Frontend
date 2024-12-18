@@ -17,6 +17,7 @@ const HotelDetails: React.FC = () => {
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [guests, setGuests] = useState(1);
+console.log('hotelId:',hotelId);
 
   useEffect(() => {
     if (hotelId) {
@@ -27,6 +28,10 @@ const HotelDetails: React.FC = () => {
   if (isLoading || !hotel) {
     return <Spinner />;
   }
+
+  const unavailableDates = hotel.unavailableDates 
+    ? hotel.unavailableDates.map((date: string) => new Date(date)) 
+    : [];
 
   return (
     <div className="container mx-auto px-4 py-2">
@@ -52,6 +57,7 @@ const HotelDetails: React.FC = () => {
             livingrooms={hotel.rooms?.livingrooms || 0}
             description={hotel.description || 'No description available'}
             amenities={hotel.amenities}
+            roomCategories={hotel?.roomCategories || []}
           />
         </div>
 
@@ -65,6 +71,7 @@ const HotelDetails: React.FC = () => {
             guests={guests}
             setGuests={setGuests}
             maxGuests={hotel.rooms?.guests || 1}
+            unavailableDates={unavailableDates}
           />
         </div>
       </div>

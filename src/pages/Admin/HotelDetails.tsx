@@ -64,6 +64,17 @@ const HotelDetails: React.FC = () => {
         return null; // Return null for unrecognized amenities
     }
   };
+  const displayedPrice = hotel.roomCategories && hotel.roomCategories.length > 0 
+  ? Math.max(...hotel.roomCategories.map(category => category.rate))
+  : hotel.price;
+
+  const displayedGuests = hotel.roomCategories && hotel.roomCategories.length > 0
+  ? Math.max(...hotel.roomCategories.map(category => category.capacity))
+  : hotel.guests;
+
+  const displayedQuantity = hotel.roomCategories && hotel.roomCategories.length > 0
+  ? Math.max(...hotel.roomCategories.map(category => category.quantity))
+  : hotel.rooms.beds;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -117,23 +128,44 @@ const HotelDetails: React.FC = () => {
                 <div className="grid grid-cols-2 gap-4 text-sm md:text-base">
                   <div className="flex items-center">
                     <Users className="w-5 h-5 mr-2 text-gray-600" />
-                    <span>{hotel.rooms.guests} guests</span>
+                    <span>{displayedGuests} guests</span>
                   </div>
                   <div className="flex items-center">
                     <Bed className="w-5 h-5 mr-2 text-gray-600" />
-                    <span>{hotel.rooms.bedrooms} bedrooms</span>
+                    <span>{displayedQuantity|| 1} bedrooms</span>
                   </div>
                   <div className="flex items-center">
                     <Bath className="w-5 h-5 mr-2 text-gray-600" />
-                    <span>{hotel.rooms.bathrooms} bathrooms</span>
+                    <span>{hotel.rooms.bathrooms || 1} bathrooms</span>
                   </div>
                   <div className="flex items-center">
                     <IndianRupee className="w-5 h-5 mr-2 text-gray-600" />
-                    <span>{hotel.price?.toFixed(2)} per night</span>
+                    <span>{displayedPrice.toFixed(2)} per night</span>
                   </div>
                 </div>
               </div>
               
+              {hotel.roomCategories && hotel.roomCategories.length > 0 && (
+              <div>
+                <h2 className="text-xl font-semibold mb-2">Room Categories</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {hotel.roomCategories.map((category, index) => (
+                    <div key={index} className="border rounded-md p-4">
+                      <h3 className="font-semibold mb-2">{category.name}</h3>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div className="flex items-center">
+                          <Bed className="w-4 h-4 mr-2 text-gray-600" />
+                          <span>{category.bedType}</span>
+                        </div>
+                        <div>Capacity: {category.capacity}</div>
+                        <div>Quantity: {category.quantity}</div>
+                        <div>Rate: ₹{category.rate}/night</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
               <div>
                 <h2 className="text-xl font-semibold mb-2">Description</h2>
                 <p className="text-gray-700 text-sm md:text-base">{hotel.description}</p>

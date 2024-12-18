@@ -1,21 +1,36 @@
-interface IMessage {
-  _id: string;
+import { User } from "./userTypes";
+
+export interface IMessage {
+  _id?: string;
   sender: string;
   content: string;
   timestamp: string;
   chatId: string; 
 }
 
-interface IChat {
+export interface IChat {
   _id: string;
-  manager: string;
-  user: string;
+  manager: User;
+  user: User;
   hotelId: string;
   bookingId: string
   messages: IMessage[];
 }
 
-interface ChatInterfaceProps {
+export interface ChatInterfaceProps {
   userId: string;
   isManager: boolean;
+}
+
+export interface UnreadMessage {
+  chatId: string;
+  senderId: string;
+  content: string;
+  timestamp: string;
+}
+
+export interface NotificationState {
+  unreadCount: number;
+  unreadMessages: UnreadMessage[];
+  lastChatId: string | null;
 }

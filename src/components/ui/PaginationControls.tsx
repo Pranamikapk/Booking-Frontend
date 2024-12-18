@@ -7,6 +7,7 @@ interface PaginationControlsProps {
 }
 
 const PaginationControls: React.FC<PaginationControlsProps> = ({ currentPage, totalPages, onPageChange }) => {
+  // if(totalPages <= 1) return null
   return (
     <div className="flex justify-center items-center mt-4">
       <button

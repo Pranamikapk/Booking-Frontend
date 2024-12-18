@@ -155,9 +155,11 @@ export default function Hotels() {
                     Not Verified
                   </span>
                 )}
+                {hotel.price === 0 ? '' :
                 <div className="absolute top-2 left-2 bg-blue-200 text-primary-foreground px-2 py-1 text-sm rounded-md">
                   ₹ {hotel.price}
                 </div>
+                }
                 <div className="p-4 flex-grow flex flex-col justify-between">
                   <div>
                     <h3 className="font-bold text-lg">{hotel.name}</h3>

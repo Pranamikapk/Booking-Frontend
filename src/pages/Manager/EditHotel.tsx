@@ -1,5 +1,3 @@
-'use client'
-
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import ReactCrop, { Crop, PixelCrop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
@@ -9,6 +7,8 @@ import { AppDispatch, RootState } from '../../app/store'
 import Button from '../../components/ui/Button'
 import Card from '../../components/ui/Card'
 import { fetchHotelById, updateHotel } from '../../features/hotel/hotelSlice'
+import { Hotel, RoomCategory } from '../../types/hotelTypes'
+import RoomCategories from './AddHotel/RoomCategory'
 
 const EditHotel: React.FC = () => {
   const { hotelId } = useParams<{ hotelId: string }>()
@@ -23,6 +23,7 @@ const EditHotel: React.FC = () => {
     description: '',
     amenities: [] as string[],
     photos: [] as string[],
+    roomCategories: [] as RoomCategory[]
   })
 
   const [cropImage, setCropImage] = useState<string | null>(null)
@@ -30,6 +31,7 @@ const EditHotel: React.FC = () => {
   const [completedCrop, setCompletedCrop] = useState<PixelCrop | null>(null)
   const imgRef = useRef<HTMLImageElement | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const allAmenities = ['Wi-Fi', 'Parking', 'Pool', 'Gym', 'Fridge', 'A/C', 'TV', 'Kitchen', 'First Aid']
 
@@ -48,9 +50,12 @@ const EditHotel: React.FC = () => {
         description: hotel.description,
         amenities: hotel.amenities || [],
         photos: hotel.photos || [],
+        roomCategories: hotel.roomCategories || []
       })
     }
   }, [hotel])
+  console.log(formData.roomCategories);
+  
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -144,6 +149,15 @@ const EditHotel: React.FC = () => {
     }))
   }
 
+  const handleChange = (data: Partial<Hotel>) => {
+    setFormData((prevData) => {
+      return {
+        ...prevData,
+        ...data,
+      };
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()    
     if (hotelId) {
@@ -152,8 +166,9 @@ const EditHotel: React.FC = () => {
           ...formData,
           price: Number(formData.price),
           rooms: hotel?.rooms,
+          roomCategories: hotel.roomCategories
         }
-        console.log(updatedData)
+        console.log("updatedData: ",updatedData)
         await dispatch(updateHotel({ hotelId, updatedData })).unwrap() 
         .catch((error) => {
           console.error('Failed to update hotel:', error)
@@ -164,6 +179,7 @@ const EditHotel: React.FC = () => {
       }
     }
   }
+  
 
   if (isLoading) return <div className="flex justify-center items-center h-screen">Loading...</div>
   if (isError) return <div className="flex justify-center items-center h-screen text-red-500">Error: {message}</div>
@@ -188,7 +204,10 @@ const EditHotel: React.FC = () => {
             ))}
           </div>
 
-          <InputField label="Price per Night" name="price" type="number" value={formData.price} onChange={handleInputChange} />
+
+          {formData.roomCategories.length === 0 && (
+            <InputField label="Price per Night" name="price" type="number" value={formData.price} onChange={handleInputChange} />
+          )}
           <TextArea label="Description" name="description" value={formData.description} onChange={handleInputChange} />
 
           <div>
@@ -204,8 +223,13 @@ const EditHotel: React.FC = () => {
               ))}
             </div>
           </div>
+          <RoomCategories
+            formData={formData.roomCategories}
+            handleChange={(updatedCategories) => handleChange({ ...formData ,roomCategories: updatedCategories })}
+            errors={errors}
+          />
 
-          <PhotoUploader 
+          <PhotoUploader  
             photos={formData.photos} 
             addPhoto={handlePhotoChange} 
             removePhoto={removePhoto} 

@@ -4,6 +4,14 @@ import Card from '../../components/ui/Card'
 import CardContent from '../../components/ui/CardContent'
 import Button from '../ui/Button'
 
+interface RoomCategory {
+  name: string;
+  bedType: string;
+  capacity: number;
+  quantity: number;
+  rate: number;
+}
+
 interface HotelInfoProps {
   guests: number
   bedrooms: number
@@ -12,6 +20,7 @@ interface HotelInfoProps {
   livingrooms: number
   description: string
   amenities: string[]
+  roomCategories: RoomCategory[]
 }
 
 const amenityIcons: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -37,11 +46,21 @@ export const AmenityItem: React.FC<{ amenity: string }> = ({ amenity }) => {
   );
 };
 
-const HotelInfo: React.FC<HotelInfoProps> = ({ guests, bedrooms, diningrooms, bathrooms, livingrooms, description, amenities }) => {
+const HotelInfo: React.FC<HotelInfoProps> = ({ 
+  guests, 
+  bedrooms, 
+  diningrooms, 
+  bathrooms, 
+  livingrooms, 
+  description, 
+  amenities,
+  roomCategories
+}) => {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const characterLimit = 100;
 
   const toggleDescription = () => setShowFullDescription(prev => !prev);
+console.log(roomCategories);
 
   return (
     <>
@@ -52,7 +71,6 @@ const HotelInfo: React.FC<HotelInfoProps> = ({ guests, bedrooms, diningrooms, ba
             {guests} guests · {bedrooms} bedrooms · {diningrooms} dining rooms · {bathrooms} bathrooms · {livingrooms} living rooms
           </p>
         </div>
-        {/* <div className="w-14 h-14 bg-gray-200 rounded-full"></div> */}
       </div>
 
       <hr className="my-6" />
@@ -69,6 +87,25 @@ const HotelInfo: React.FC<HotelInfoProps> = ({ guests, bedrooms, diningrooms, ba
             {showFullDescription ? "Show less" : "Show more"}
           </Button>
         )}
+      </div>
+
+      <hr className="my-6" />
+
+      <div className="mb-6">
+        <h3 className="text-xl font-semibold mb-4">Room Categories</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {roomCategories.map((category, index) => (
+            <Card key={index}>
+              <CardContent className="p-4">
+                <h4 className="font-semibold text-lg mb-2">{category.name}</h4>
+                <p className="text-sm text-gray-600 mb-1">Bed Type: {category.bedType}</p>
+                <p className="text-sm text-gray-600 mb-1">Capacity: {category.capacity} guests</p>
+                <p className="text-sm text-gray-600 mb-1">Quantity: {category.quantity}</p>
+                <p className="text-sm font-semibold text-blue-600">Rate: ₹{category.rate}/night</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
 
       <hr className="my-6" />
@@ -112,3 +149,4 @@ const HotelInfo: React.FC<HotelInfoProps> = ({ guests, bedrooms, diningrooms, ba
 };
 
 export default HotelInfo;
+

@@ -6,7 +6,7 @@ import FilterSidebar from '../../components/HomePage/FilterSideBar'
 import HotelList from '../../components/HomePage/HotelList'
 import SearchCard from '../../components/HomePage/SearchCard'
 import Spinner from '../../components/Spinner'
-import { fetchHotels, setFilters, setSearchValue, setSortBy } from '../../features/home/hotels'
+import { searchHotels, setFilters, setSearchValue, setSortBy } from '../../features/home/hotels'
 
 
 const Search: React.FC = () => {
@@ -17,8 +17,8 @@ const Search: React.FC = () => {
 
   useEffect(() => {
     if (filters.checkInDate) {
-      dispatch(fetchHotels({ checkInDate: filters.checkInDate }));
-    }  }, [dispatch, filters.checkInDate])
+      dispatch(searchHotels({ searchTerm: search, checkInDate: filters.checkInDate }));
+    }  }, [dispatch, filters.checkInDate,search])
 
   useEffect(() => {
     if (hotels.length > 0) {

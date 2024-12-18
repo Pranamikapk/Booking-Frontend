@@ -6,6 +6,7 @@ import ChatWindow from '../../components/Chat/ChatWindow';
 import Spinner from '../../components/Spinner';
 import { listReservations } from '../../features/booking/bookingSlice';
 import { Booking } from '../../types/bookingTypes';
+import { IChat, IMessage } from '../../types/chatTypes';
 
 
 const socket = io('http://localhost:3000');
@@ -29,23 +30,36 @@ const ManagerChat: React.FC<ManagerChatProps> = ({ managerId }) => {
 
   useEffect(() => {
     const handleNewMessage = (message: IMessage) => {
+      console.log('Received new message:', message);
       setSelectedChat((prevChat) => {
+        console.log('Previous chat ID:', prevChat?._id);
+        console.log('Message chat ID:', message.chatId);
         if (prevChat && prevChat._id === message.chatId) {
-          const existingMessages = prevChat.messages.map((msg) => msg);
-          if (!existingMessages.includes(message)) {
-            return { ...prevChat, messages: [...prevChat.messages, message] };
-          }
-        }
+          // const isDuplicate = prevChat.messages?.some(
+          //   (msg) => msg._id === message._id || 
+              // (msg.sender === message.sender && msg.content === message.content && msg.timestamp === message.timestamp)
+          // );
+          // if (isDuplicate) return prevChat;
+          
+          const updatedChat = { 
+            ...prevChat, 
+            messages: [...(prevChat.messages || []), message] 
+          };
+          console.log('Updated Chat:', updatedChat);
+          return updatedChat;
+        }        
         return prevChat;
       });
     };
-  
+  console.log("SelectedChat:",selectedChat);
+  socket.off('new message'); // Prevent duplicate listeners
+
     socket.on('new message', handleNewMessage);
   
     return () => {
       socket.off('new message', handleNewMessage);  
     };
-  }, [selectedChat]);
+  }, [selectedChat,]);
 
   const handleUserSelect = async (booking: Booking) => {
     try {
@@ -67,7 +81,7 @@ const ManagerChat: React.FC<ManagerChatProps> = ({ managerId }) => {
         setSelectedChat(existingChat);
         socket.emit('join chat', {
           managerId: existingChat.manager,
-          userId: existingChat.user,
+          userId: existingChat.user._id,
           bookingId: existingChat.bookingId,
         });
       } else {
@@ -79,7 +93,7 @@ const ManagerChat: React.FC<ManagerChatProps> = ({ managerId }) => {
           },
           credentials: 'include',
           body: JSON.stringify({
-            receiver: booking.user._id,
+            receiver: booking.user,
             managerId,
             bookingId: booking._id,
             content: `Hello ${booking.userCredentials.name}, welcome to our ${booking.hotel.name}!`,
@@ -168,8 +182,9 @@ const ManagerChat: React.FC<ManagerChatProps> = ({ managerId }) => {
           <ChatWindow
             chat={selectedChat}
             currentUserId={managerId}
-            onSendMessage={handleSendMessage}
-          />
+            onSendMessage={handleSendMessage} 
+            userName={selectedChat.user.name}         
+             />
         ) : (
           <div className="h-full flex items-center justify-center text-gray-500">
             Select a user to start messaging

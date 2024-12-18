@@ -2,9 +2,10 @@ import React from 'react';
 
 
 interface InputProps{
+  id?: string
   type?: string;
   placeholder?: string
-  value : string
+  value : string | number
   onChange : (event: React.ChangeEvent<HTMLInputElement>) => void
     className?: string
     min?: string

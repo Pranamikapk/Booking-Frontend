@@ -15,7 +15,17 @@ export interface Address {
     postalCode ?: string;
 }
 
+export interface RoomCategory {
+    name: string;
+    bedType: string;
+    capacity: number;
+    quantity: number;
+    rate: number;
+    description?: string;
+  }
+
 export interface Hotel {
+    unavailableDates: any;
     reviews: number;
     rating: number;
     isListed: boolean;
@@ -24,6 +34,7 @@ export interface Hotel {
     name: string;
     address: Address;
     rooms: Rooms;
+    roomCategories: RoomCategory[];
     amenities: string[];
     description: string;
     photos: string[]; 
@@ -37,6 +48,7 @@ export interface HotelFormState {
     manager: Manager | null;
     propertyType: string;
     placeType: string;
+    roomCategories: RoomCategory[];
     address: Address;
     rooms: Rooms;
     amenities: string[];

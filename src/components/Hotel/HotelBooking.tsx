@@ -15,6 +15,7 @@ interface HotelBookingProps {
   guests: number;
   setGuests: React.Dispatch<React.SetStateAction<number>>;
   maxGuests: number;
+  unavailableDates: Date[];
 }
 
 const HotelBooking: React.FC<HotelBookingProps> = ({ 
@@ -25,7 +26,8 @@ const HotelBooking: React.FC<HotelBookingProps> = ({
   setDateRange, 
   guests, 
   setGuests,
-  maxGuests
+  maxGuests,
+  unavailableDates 
 }) => {
   const navigate = useNavigate();
   const [includeCleaning, setIncludeCleaning] = useState(false); 
@@ -58,6 +60,11 @@ const HotelBooking: React.FC<HotelBookingProps> = ({
       alert('Please select dates and number of guests');
     }
   };
+
+  const disabledDates = [
+    { before: new Date() }, 
+    ...unavailableDates.map(date => ({ from: date, to: date }))
+  ];
 
   return (
     <Card className="max-w-md mx-auto">
@@ -121,7 +128,7 @@ const HotelBooking: React.FC<HotelBookingProps> = ({
                 borderRadius: '50%',
               },
             }}
-            disabled={{ before: new Date() }}
+            disabled={disabledDates}
             footer={
               dateRange?.from && dateRange?.to && (
                 <p className="text-sm text-center mt-4">

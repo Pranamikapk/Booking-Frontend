@@ -7,6 +7,7 @@ const API_URL = 'http://localhost:3000/manager/';
 const initialState: HotelFormState = {
   propertyType: '',
   placeType: '',
+  roomCategories: [],
   address: { city: '', state: '', country: '', postalCode: '' },
   rooms: { guests: 1, bedrooms: 0, bathrooms: 0, diningrooms: 0, livingrooms: 0 },
   amenities: [],
@@ -198,6 +199,6 @@ const hotelSlice = createSlice({
   }
 });
 
-// Actions and reducer export
+
 export const { updateFormData, updatePhotos, resetForm, updateStep, setHotelListingStatus } = hotelSlice.actions;
 export default hotelSlice.reducer;

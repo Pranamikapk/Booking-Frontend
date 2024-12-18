@@ -21,6 +21,8 @@ const ReservationDetails: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentImage, setCurrentImage] = useState('');
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
   const [cancellationRequest, setCancellationRequest] = useState<{ reason: string; status: string } | null>(null);
 
 console.log(booking);  
@@ -60,10 +62,16 @@ console.log(booking);
   };
 
   const handleRejectCancellation = async () => {
+    setIsRejectModalOpen(true);
+  };
+
+  const submitRejection = async () => {
     if (!booking || !booking._id) return;
     try {
-      await dispatch(rejectCancellation({ bookingId: booking._id, token })).unwrap();
+      await dispatch(rejectCancellation({ bookingId: booking._id, token, reason: rejectionReason })).unwrap();
       toast.success('Cancellation rejected successfully');
+      setIsRejectModalOpen(false);
+      setRejectionReason('');
     } catch (err) {
       toast.error('Failed to reject cancellation');
     }
@@ -232,6 +240,25 @@ console.log(booking);
               </tbody>
             </table>
           </div>
+          <Modal isOpen={isModalOpen} onClose={closeModal}>
+            <img src={currentImage} alt="ID Document Full Size" style={{ width: '100%' }} />
+          </Modal>
+
+          <Modal isOpen={isRejectModalOpen} onClose={() => setIsRejectModalOpen(false)}>
+            <div className="p-6">
+              <h2 className="text-2xl font-bold mb-4">Reject Cancellation Request</h2>
+              <textarea
+                className="w-full h-32 p-2 border rounded mb-4"
+                placeholder="Enter reason for rejection"
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+              ></textarea>
+              <div className="flex justify-end space-x-4">
+                <Button variant="secondary" onClick={() => setIsRejectModalOpen(false)}>Cancel</Button>
+                <Button variant="danger" onClick={submitRejection}>Submit Rejection</Button>
+              </div>
+            </div>
+          </Modal>
           <div className="mt-8 flex justify-end space-x-4">
             <Button variant="secondary" onClick={() => window.history.back()}>
               Back

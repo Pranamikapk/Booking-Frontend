@@ -1,4 +1,4 @@
-import { LogOut, UserCircle, Wallet } from 'lucide-react'
+import { LogOut, UserCircle } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Link, useNavigate, useParams } from 'react-router-dom'
@@ -7,6 +7,7 @@ import { AppDispatch, RootState } from '../../app/store'
 import Spinner from '../../components/Spinner'
 import { logout, updateProfile } from '../../features/user/authSlice'
 import BookingsPage from './BookingsPage'
+import TransactionsPage from './Transactions'
 
 export default function Account(): React.JSX.Element | null {
   const { user, isLoading, isSuccess, isError, message } = useSelector((state: RootState) => state.auth)
@@ -97,16 +98,15 @@ export default function Account(): React.JSX.Element | null {
         <Link className={linkClasses('bookings')} to={'/user/bookings'}>
           My Bookings
         </Link>
+        <Link className={linkClasses('transactions')} to={'/user/transactions'}>
+          My Transactions
+        </Link>
       </nav>
       <div>
         {subpage === 'profile' && (
-          <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-            <div className="bg-primary text-primary py-4 px-6 flex justify-between items-center">
-              <h2 className="text-2xl font-bold ">Profile</h2>
-              <div className="flex items-center space-x-2 bg-gray-100 p-3 rounded-lg shadow-lg">
-                <Wallet className="text-primary" />
-                <span className="text-lg font-semibold">Wallet Balance: ₹ {user?.wallet ? user.wallet.toFixed(2) : '0.00'}</span>
-              </div>
+          <div className="container mx-auto px-2 py-6">
+            <h1 className="text-2xl font-bold mb-6">Your Profile</h1>
+            <div className="text-primary py-4 px-6 flex justify-between items-center">
             </div>
             <div className="p-6 flex flex-col md:flex-row">
               <div className="md:w-1/3 mb-6 md:mb-0">
@@ -214,6 +214,9 @@ export default function Account(): React.JSX.Element | null {
         )}
         {subpage === 'bookings' && (
           <BookingsPage />
+        )}
+        {subpage === 'transactions' && (
+          <TransactionsPage />
         )}
       </div>
     </div>

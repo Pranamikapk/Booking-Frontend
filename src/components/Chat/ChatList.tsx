@@ -1,4 +1,5 @@
 import React from 'react';
+import { IChat } from '../../types/chatTypes';
 
 interface ChatListProps {
   chats: IChat[];

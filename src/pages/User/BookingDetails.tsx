@@ -1,5 +1,3 @@
-'use client'
-
 import { Plus, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -20,16 +18,17 @@ export default function BookingDetails() {
   const [error, setError] = useState<string | null>(null);
   const [showAllImages, setShowAllImages] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
   const [cancellationReason, setCancellationReason] = useState('');
   const [isRequestPending, setIsRequestPending] = useState(false);
-  const token = useSelector((state:RootState)=>state.auth.user?.token)
-  const navigate = useNavigate()
+  const token = useSelector((state: RootState) => state.auth.user?.token);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchBookingDetails = async () => {
       setIsLoading(true);
       try {
-        console.log("Token:",token);
+        console.log("Token:", token);
         
         const response = await fetch(`${API_URL}booking/${bookingId}`, {
           headers: {
@@ -52,17 +51,30 @@ export default function BookingDetails() {
     if (bookingId) {
       fetchBookingDetails();
     }
-  }, [bookingId]);
+  }, [bookingId, token]);
 
-  const handleCancelBookingRequest = async () => {
-    if (!bookingId) return;
-    
+  const handleCancelBookingRequest = () => {
+    if (!bookingId || !booking) return;
+    const checkInDate = new Date(booking.checkInDate);
+    const currentTime = new Date();
+    const hoursDifference = (checkInDate.getTime() - currentTime.getTime()) / (1000 * 60 * 60);
+
+    if (hoursDifference <= 4) {
+        setShowRejectModal(true);
+        toast.error('Cancellations are not allowed within 3 hours of check-in.');
+      
+    } else {
+      setShowCancelModal(true);
+    }
+  };
+
+  const submitCancellationRequest = async () => {
     try {
       const response = await fetch(`${API_URL}cancelRequest`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ bookingId, reason: cancellationReason }),
       });
@@ -82,9 +94,9 @@ export default function BookingDetails() {
           ...prevBooking, 
           cancellationRequest: { 
             reason: cancellationReason, 
-            status: 'pending' 
+            status: 'Pending' 
           },
-          status: 'cancellation_pending'
+          status: 'Cancellation_pending'
         } : null
       );
     } catch (error) {
@@ -93,7 +105,7 @@ export default function BookingDetails() {
     }
   };
 
-  console.log('booking?.cancellationRequest',booking?.cancellationRequest);
+  console.log('booking?.cancellationRequest', booking?.cancellationRequest);
   
   if (isLoading) return <Spinner />;
   if (error) return <div className="text-red-500 text-center">{error}</div>;
@@ -232,17 +244,31 @@ export default function BookingDetails() {
             </div>
           ) : (
             <Button
-              variant="danger"
-              onClick={() => setShowCancelModal(true)}
-              disabled={booking.status === 'cancellation_pending'}
-            >
-              {booking.status === 'cancellation_pending' ? 'Cancellation Pending' : 'Cancel Booking'}
-            </Button>
+            variant='danger'
+            onClick={handleCancelBookingRequest}
+            disabled={isRequestPending || booking.status === 'Cancellation_pending'}
+          >
+            Cancel Booking
+          </Button>
           )}
-          <Button variant='primary' onClick={()=>navigate(`/chat/${booking._id}`)} disabled={booking.status === 'cancellation_pending'}
-          >Message</Button>
+         {(booking.status === 'Completed' || booking.cancellationRequest?.status === 'Rejected') && (
+          <Button 
+            variant='primary' 
+            onClick={() => navigate(`/chat/${booking._id}`)} 
+          >
+            Message
+          </Button>
+        )}
         </div>
       </div>
+
+      <Modal isOpen={showRejectModal} onClose={() => setShowRejectModal(false)}>
+        <h2 className="text-xl font-bold mb-4">Cancellation Not Allowed</h2>
+        <p>Cancellations are not allowed between 3 to 4 hours before check-in. Please contact support for assistance if you need to make changes to your booking.</p>
+        <div className="mt-4 flex justify-end">
+       
+        </div>
+      </Modal>
 
       <Modal
         isOpen={showCancelModal}
@@ -258,12 +284,10 @@ export default function BookingDetails() {
           rows={4}
         />
         <div className="mt-4 flex justify-end space-x-2">
-          <Button variant="list" onClick={() => setShowCancelModal(false)}>
-            Close
-          </Button>
+     
           <Button
             variant="danger"
-            onClick={handleCancelBookingRequest}
+            onClick={submitCancellationRequest}
             disabled={!cancellationReason.trim()}
           >
             Confirm Cancellation
@@ -301,3 +325,4 @@ export default function BookingDetails() {
     </div>
   );
 }
+

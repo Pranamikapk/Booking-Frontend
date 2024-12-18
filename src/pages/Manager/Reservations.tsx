@@ -16,6 +16,7 @@ interface SortOption {
 }
 
 const sortOptions: SortOption[] = [
+  { value: 'all', label: 'All Reservations' },
   { value: 'checkInDateAsc', label: 'Check-in Date (Earliest First)' },
   { value: 'checkInDateDesc', label: 'Check-in Date (Latest First)' },
   { value: 'totalPriceAsc', label: 'Total Price (Low to High)' },
@@ -23,6 +24,7 @@ const sortOptions: SortOption[] = [
 ];
 
 const sortFunctions = {
+  all: (a: any) => new Date(a.createdAt).getTime(),
   checkInDateAsc: (a: any, b: any) => new Date(a.checkInDate).getTime() - new Date(b.checkInDate).getTime(),
   checkInDateDesc: (a: any, b: any) => new Date(b.checkInDate).getTime() - new Date(a.checkInDate).getTime(),
   totalPriceAsc: (a: any, b: any) => a.totalPrice - b.totalPrice,
@@ -33,7 +35,7 @@ export default function Reservations() {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
-  const [sortBy, setSortBy] = useState<keyof typeof sortFunctions>('checkInDateAsc');
+  const [sortBy, setSortBy] = useState<keyof typeof sortFunctions>('all');
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(8);
@@ -95,7 +97,7 @@ export default function Reservations() {
           <option value="Pending">Pending</option>
           <option value="Completed">Completed</option>
           <option value="Cancelled">Cancelled</option>
-          <option value="Cancellation_pending">Cancellation_pending</option>
+          {/* <option value="Cancellation_pending">Cancellation_pending</option> */}
           <option value="Rejected">Rejected</option>
 
         </select>

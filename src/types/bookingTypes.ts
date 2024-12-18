@@ -13,7 +13,8 @@ export interface BookingData {
 
 export interface CancellationRequest {
     reason: string;
-    status: 'pending' | 'approved' | 'rejected';
+    status: 'Pending' | 'Approved' | 'Rejected';
+    createdAt ?: string
 }
 
 export interface Booking extends BookingData {
