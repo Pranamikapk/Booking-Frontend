@@ -17,7 +17,7 @@ const Search: React.FC = () => {
 
   useEffect(() => {
     if (filters.checkInDate) {
-      dispatch(searchHotels({ searchTerm: search, checkInDate: filters.checkInDate }));
+      dispatch(searchHotels({ searchTerm: search, checkInDate: filters.checkInDate ,checkOutDate: filters.checkOutDate}));
     }  }, [dispatch, filters.checkInDate,search])
 
   useEffect(() => {

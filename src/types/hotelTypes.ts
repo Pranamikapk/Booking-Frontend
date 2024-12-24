@@ -26,6 +26,7 @@ export interface RoomCategory {
 
 export interface Hotel {
     unavailableDates: any;
+    availability: string;
     reviews: number;
     rating: number;
     isListed: boolean;

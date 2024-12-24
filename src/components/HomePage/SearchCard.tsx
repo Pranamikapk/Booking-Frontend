@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { AppDispatch, RootState } from "../../app/store";
-import { setFilters, setSearchValue } from "../../features/home/hotels";
+import { searchHotels, setFilters, setSearchValue } from "../../features/home/hotels";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
 
@@ -32,7 +32,17 @@ const SearchCard: React.FC<SearchCardProps> = ({ states }) => {
 
   const onSubmit = () => {
     dispatch(setSearchValue(selectedState))
-    dispatch(setFilters({ state: selectedState, guestCount: guests , checkInDate , checkOutDate}))
+    dispatch(setFilters({ 
+      state: selectedState, 
+      guestCount: guests ,
+      checkInDate ,
+      checkOutDate
+    }))
+    dispatch(searchHotels({ 
+      searchTerm: selectedState, 
+      checkInDate, 
+      checkOutDate 
+    }))
     navigate('/search')
   }
 
@@ -99,6 +109,7 @@ const SearchCard: React.FC<SearchCardProps> = ({ states }) => {
         <Button className="primary hover:bg-blue-700 text-white h-10 px-4" onClick={onSubmit}>
           Search
         </Button>
+        
       </div>
     </div>
   );

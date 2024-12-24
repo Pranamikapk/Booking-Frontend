@@ -15,6 +15,7 @@ const notificationSlice = createSlice({
       state.unreadCount += 1;
       state.unreadMessages.push(action.payload);
       state.lastChatId = action.payload.chatId;
+      console.log("Payload:",action.payload.chatId);
     },
     clearNotifications: (state) => {
       state.unreadCount = 0;

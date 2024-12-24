@@ -7,7 +7,7 @@ import Spinner from '../../components/Spinner';
 import { listReservations } from '../../features/booking/bookingSlice';
 import { Booking } from '../../types/bookingTypes';
 import { IChat, IMessage } from '../../types/chatTypes';
-
+const API_URL = 'http://localhost:3000/manager/';
 
 const socket = io('http://localhost:3000');
 
@@ -20,7 +20,7 @@ const ManagerChat: React.FC<ManagerChatProps> = ({ managerId }) => {
   const [selectedChat, setSelectedChat] = useState<IChat | null>(null);
   const { manager } = useSelector((state: RootState) => state.managerAuth);
   const { bookings, isLoading, isError } = useSelector((state: RootState) => state.booking);
-  const API_URL = 'http://localhost:3000/manager/';
+  const [unreadMessages, setUnreadMessages] = useState<Record<string, number>>({});
 
   useEffect(() => {
     if (manager && manager._id) {
@@ -30,36 +30,36 @@ const ManagerChat: React.FC<ManagerChatProps> = ({ managerId }) => {
 
   useEffect(() => {
     const handleNewMessage = (message: IMessage) => {
-      console.log('Received new message:', message);
       setSelectedChat((prevChat) => {
-        console.log('Previous chat ID:', prevChat?._id);
-        console.log('Message chat ID:', message.chatId);
         if (prevChat && prevChat._id === message.chatId) {
-          // const isDuplicate = prevChat.messages?.some(
-          //   (msg) => msg._id === message._id || 
-              // (msg.sender === message.sender && msg.content === message.content && msg.timestamp === message.timestamp)
-          // );
-          // if (isDuplicate) return prevChat;
-          
-          const updatedChat = { 
-            ...prevChat, 
-            messages: [...(prevChat.messages || []), message] 
+          const isDuplicate = prevChat.messages.some(
+            (msg) => msg.timestamp === message.timestamp && msg.content === message.content
+          );
+          if (isDuplicate) return prevChat;
+
+          return {
+            ...prevChat,
+            messages: [...prevChat.messages, message],
           };
-          console.log('Updated Chat:', updatedChat);
-          return updatedChat;
-        }        
+        }
         return prevChat;
       });
+
+      setUnreadMessages((prev) => {
+        if (selectedChat?._id === message.chatId) return prev; // No need to count unread messages for selected chat
+        return {
+          ...prev,
+          [message.chatId]: (prev[message.chatId] || 0) + 1,
+        };
+      });
     };
-  console.log("SelectedChat:",selectedChat);
-  socket.off('new message'); // Prevent duplicate listeners
 
     socket.on('new message', handleNewMessage);
-  
+
     return () => {
-      socket.off('new message', handleNewMessage);  
+      socket.off('new message', handleNewMessage);
     };
-  }, [selectedChat,]);
+  }, [selectedChat]);
 
   const handleUserSelect = async (booking: Booking) => {
     try {
@@ -72,11 +72,11 @@ const ManagerChat: React.FC<ManagerChatProps> = ({ managerId }) => {
         },
         credentials: 'include',
       });
-  
+
       if (!response.ok) throw new Error('Failed to fetch chat');
-  
+
       const existingChat = await response.json();
-  
+
       if (existingChat && existingChat.messages.length > 0) {
         setSelectedChat(existingChat);
         socket.emit('join chat', {
@@ -84,6 +84,10 @@ const ManagerChat: React.FC<ManagerChatProps> = ({ managerId }) => {
           userId: existingChat.user._id,
           bookingId: existingChat.bookingId,
         });
+        setUnreadMessages((prev) => ({
+          ...prev,
+          [existingChat._id]: 0,
+        }));
       } else {
         const createResponse = await fetch(`${API_URL}send`, {
           method: 'POST',
@@ -99,9 +103,9 @@ const ManagerChat: React.FC<ManagerChatProps> = ({ managerId }) => {
             content: `Hello ${booking.userCredentials.name}, welcome to our ${booking.hotel.name}!`,
           }),
         });
-  
+
         if (!createResponse.ok) throw new Error('Failed to create chat');
-  
+
         const newChat = await createResponse.json();
         setSelectedChat(newChat);
         socket.emit('join chat', {
@@ -114,44 +118,39 @@ const ManagerChat: React.FC<ManagerChatProps> = ({ managerId }) => {
       console.error('Error handling user select:', error);
     }
   };
-  
 
   const handleSendMessage = async (content: string) => {
-    if (selectedChat) {
-      const message: IMessage = {
-        chatId: selectedChat._id,
-        sender: managerId,
-        content,
-        timestamp: new Date().toISOString()
-      };
-      
-      try {
-        const response = await fetch(`${API_URL}send`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${manager?.token}`,
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({
-            receiver: selectedChat.user,
-            managerId,
-            bookingId: selectedChat.bookingId,
-            content: message.content,
-          }),
-        });
+    if (!selectedChat) return;
 
-        if (!response.ok) throw new Error('Failed to send message');
+    const message: IMessage = {
+      chatId: selectedChat._id,
+      sender: managerId,
+      content,
+      timestamp: new Date().toISOString(),
+    };
 
-        // const updatedChat = await response.json();
-        // setSelectedChat(updatedChat);
-        socket.emit('send message', { chatId: selectedChat._id, message });
-      } catch (error) {
-        console.error('Error sending message:', error);
-      }
+    try {
+      const response = await fetch(`${API_URL}send`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${manager?.token}`,
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          receiver: selectedChat.user,
+          managerId,
+          bookingId: selectedChat.bookingId,
+          content: message.content,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to send message');
+    } catch (error) {
+      console.error('Error sending message:', error);
     }
   };
-  
+
   if (isLoading) {
     return <Spinner />;
   }
@@ -182,9 +181,9 @@ const ManagerChat: React.FC<ManagerChatProps> = ({ managerId }) => {
           <ChatWindow
             chat={selectedChat}
             currentUserId={managerId}
-            onSendMessage={handleSendMessage} 
-            userName={selectedChat.user.name}         
-             />
+            onSendMessage={handleSendMessage}
+            userName={selectedChat.user.name}
+          />
         ) : (
           <div className="h-full flex items-center justify-center text-gray-500">
             Select a user to start messaging

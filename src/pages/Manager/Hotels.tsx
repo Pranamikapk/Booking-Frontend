@@ -74,6 +74,8 @@ export default function Hotels() {
   }, [dispatch]);
 
   const handleToggleListingStatus = useCallback((hotelId: string, currentStatus: boolean) => {
+    console.log("Inside :",currentStatus);
+    
     const newStatus = !currentStatus;
     setListingStatuses((prev) => ({ ...prev, [hotelId]: newStatus }));
 

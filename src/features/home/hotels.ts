@@ -17,6 +17,7 @@ interface HotelState {
         amenities: string[];
         guestCount: number;
         state: string;
+        name: string;
         checkInDate: string;
         checkOutDate: string;
     };
@@ -35,6 +36,7 @@ const initialState: HotelState = {
         amenities: [],
         guestCount: 1,
         state : '',
+        name: '',
         checkInDate: '',
         checkOutDate: ''
     },
@@ -64,12 +66,12 @@ export const fetchHotelById = createAsyncThunk<Hotel, string, { rejectValue: str
     }
 );
 
-export const searchHotels = createAsyncThunk<Hotel[], {searchTerm: string , checkInDate: string }, { rejectValue: string }>(
+export const searchHotels = createAsyncThunk<Hotel[], {searchTerm: string , checkInDate: string , checkOutDate: string}, { rejectValue: string }>(
     "hotel/searchHotels",
-    async ({ searchTerm , checkInDate}, thunkAPI) => {
+    async ({ searchTerm , checkInDate ,checkOutDate }, thunkAPI) => {
         try {
-            const response = await axios.get<Hotel[]>(`${API_URL}hotel/search`,{
-                params: {term: searchTerm, checkInDate}
+            const response = await axios.get<Hotel[]>(`${API_URL}search`,{
+                params: {term: searchTerm, checkInDate, checkOutDate}
             });
             return response.data;
         } catch (error: any) {
@@ -140,6 +142,8 @@ const hotelHomeSlice = createSlice({
             .addCase(searchHotels.rejected, (state, action) => {
                 state.isLoading = false;
                 state.error = action.payload || "Failed to search hotels";
+                console.error("Error:", action.payload); // Log error
+
             });
     },
 });
@@ -150,7 +154,23 @@ const applyFilters = (hotels: Hotel[], state: HotelState) => {
             const matchesSearch = hotel.name.toLowerCase().includes(state.search.toLowerCase());
             const matchesState = state.filters.state 
                 ? hotel.address?.state?.toLowerCase() === state.filters.state.toLowerCase() 
-                : true;     
+                : true; 
+                    
+            const matchesName = state.filters.name
+            ? hotel.name.toLowerCase().includes(state.filters.name.toLowerCase())
+            : true;
+
+            const availabilityDates = typeof hotel.availability === 'string' 
+                ? JSON.parse(hotel.availability) 
+                : hotel.availability;
+
+            const isAvailable = Array.isArray(availabilityDates)
+                ? availabilityDates.every((day: { date: string; isAvailable: boolean }) =>
+                    (new Date(day.date) >= new Date(state.filters.checkInDate) &&
+                        new Date(day.date) <= new Date(state.filters.checkOutDate) &&
+                        day.isAvailable)
+                )
+                : true;
 
             const isMatching = matchesSearch || matchesState;
             const hotelPrice = hotel.price ?? Infinity;
@@ -160,7 +180,7 @@ const applyFilters = (hotels: Hotel[], state: HotelState) => {
             const hasCapacity = guestCapacity >= state.filters.guestCount;
 
             
-            return isMatching && inPriceRange && hasAmenities && hasCapacity;
+            return isMatching && inPriceRange && hasAmenities && hasCapacity && isAvailable && matchesName;
         })
         .sort((a, b) => {
             const priceA = a.price ?? Infinity;

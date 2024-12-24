@@ -113,7 +113,7 @@ const Header: React.FC = () => {
             <Bell className="h-6 w-6 text-gray-600" />
             {unreadCount > 0 && (
               <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
-                {3}
+                {unreadCount}
               </span>
             )}
           </div>
