@@ -39,7 +39,7 @@ export interface Hotel {
     amenities: string[];
     description: string;
     photos: string[]; 
-    price: number | null;
+    price: string | null;
     managerId?: string;
     isVerified : boolean
 }

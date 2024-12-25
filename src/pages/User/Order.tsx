@@ -6,7 +6,7 @@ import { toast } from 'react-toastify'
 import { AppDispatch, RootState } from '../../app/store'
 import CancellationPolicy from '../../components/Booking/CancellationPolicy'
 import GroundRules from '../../components/Booking/GroundRules'
-import IDUpload from '../../components/Booking/IdUpload'
+import IDUpload from '../../components/Booking/IDUpload'
 import PaymentOptions from '../../components/Booking/PaymentOptions'
 import { PriceDetails } from '../../components/Booking/PriceDetails'
 import ProfileSection from '../../components/Booking/Profile'
@@ -137,7 +137,7 @@ export default function Order() {
 
   const handleWalletPayment = async (orderData: any) => {
     try {
-      const response = await fetch("http://localhost:3000/walletPayment", {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/walletPayment`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -172,7 +172,7 @@ export default function Order() {
       throw new Error("Failed to load Razorpay SDK")
     }
 
-    const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY
+    const razorpayKey = `${import.meta.env.VITE_RAZORPAY_KEY}`
     console.log("razorpayKey:",razorpayKey);
     
     let amountToPay = paymentOption === 'partial' ? total * 0.2 : total
@@ -187,7 +187,7 @@ export default function Order() {
       order_id: orderData.orderId,
       handler: async (response: any) => {
         try {
-          const verifyResponse = await fetch("http://localhost:3000/verifyPayment", {
+          const verifyResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/verifyPayment`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

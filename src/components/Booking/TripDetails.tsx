@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 
-const API_URL = 'http://localhost:3000/'; 
+const API_URL = import.meta.env.VITE_API_BASE_URL; 
 
 export const TripDetails = ({ checkIn, checkOut, rooms, guests, amenities, hotelId }) => {
   const location = useLocation();

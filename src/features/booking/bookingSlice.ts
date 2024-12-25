@@ -10,7 +10,7 @@ interface BookingState {
   isError: string | null;
 }
 
-const API_URL = 'http://localhost:3000/';
+const API_URL = `${import.meta.env.VITE_API_BASE_URL}/`;
 
 export const createBooking = createAsyncThunk<Booking, BookingData, { state: RootState, rejectValue: string }>(
   "booking/createBooking",

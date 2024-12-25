@@ -5,10 +5,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { io } from 'socket.io-client';
 import { AppDispatch, RootState } from '../../app/store';
+import { logout, reset } from '../../features/admin/adminSlice';
 import { addUnreadMessage, clearNotifications } from '../../features/home/notificationSlice';
-import { logout, reset } from '../../features/user/authSlice';
 
-const socket = io('http://localhost:3000', { autoConnect: false });
+const socket = io(`${import.meta.env.VITE_API_BASE_URL}`, { autoConnect: false });
 
 const Header: React.FC = () => {
   const navigate = useNavigate();

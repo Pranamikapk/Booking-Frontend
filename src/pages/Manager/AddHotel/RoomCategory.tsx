@@ -8,7 +8,7 @@ interface RoomCategoriesProps {
   formData: {
     roomCategories: RoomCategory[];
   };
-  handleChange: (data: { roomCategories: RoomCategory[] }) => void;
+  handleChange: (updatedCategories: RoomCategory[]) => void;
   errors: Record<string, string>;
 }
 
@@ -34,7 +34,7 @@ export default function RoomCategories({ formData, handleChange, errors }: RoomC
     }
     const updatedCategories = [...categories, newCategory]
     setCategories(updatedCategories)
-    handleChange({ roomCategories: updatedCategories })
+    handleChange( updatedCategories )
   }
 
   useEffect(() => {
@@ -46,7 +46,7 @@ export default function RoomCategories({ formData, handleChange, errors }: RoomC
   const removeCategory = (index: number) => {
     const updatedCategories = categories.filter((_, i) => i !== index)
     setCategories(updatedCategories)
-    handleChange({ roomCategories: updatedCategories })
+    handleChange( updatedCategories )
   }
 
   const updateCategory = (index: number, field: keyof RoomCategory, value: string | number) => {
@@ -57,7 +57,7 @@ export default function RoomCategories({ formData, handleChange, errors }: RoomC
       return category
     })
     setCategories(updatedCategories)
-    handleChange({ roomCategories: updatedCategories })
+    handleChange( updatedCategories )
   }
 console.log('categories:',categories);
 

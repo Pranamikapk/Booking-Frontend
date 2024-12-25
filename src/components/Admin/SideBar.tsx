@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { AppDispatch } from '../../app/store';
-import { logout } from '../../features/admin/adminSlice';
+import { logout } from '../../features/user/authSlice';
 
 const SideBar : React.FC = () => {
   const dispatch : AppDispatch =  useDispatch();

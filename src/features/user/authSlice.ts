@@ -4,7 +4,7 @@ import { RootState } from '../../app/store';
 import { Hotel } from '../../types/hotelTypes';
 import { User, UserData } from '../../types/userTypes';
 
-const API_URL = 'http://localhost:3000/';
+const API_URL = `${import.meta.env.VITE_API_BASE_URL}/`;
 
 const authHeaders = (token: string) => ({
   headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }

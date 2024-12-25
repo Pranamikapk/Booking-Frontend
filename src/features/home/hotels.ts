@@ -2,7 +2,7 @@ import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { Hotel } from "../../types/hotelTypes";
 
-const API_URL = 'http://localhost:3000/';
+const API_URL = `${import.meta.env.VITE_API_BASE_URL}/`;
 
 interface HotelState {
     isLoading: boolean;
@@ -142,7 +142,7 @@ const hotelHomeSlice = createSlice({
             .addCase(searchHotels.rejected, (state, action) => {
                 state.isLoading = false;
                 state.error = action.payload || "Failed to search hotels";
-                console.error("Error:", action.payload); // Log error
+                console.error("Error:", action.payload);
 
             });
     },

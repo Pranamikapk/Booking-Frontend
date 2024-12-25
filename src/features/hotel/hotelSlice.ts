@@ -2,7 +2,7 @@ import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../../app/store';
 import { Hotel, HotelFormState } from "../../types/hotelTypes";
 
-const API_URL = 'http://localhost:3000/manager/';
+const API_URL = `${import.meta.env.VITE_API_BASE_URL}/manager/`;
 
 const initialState: HotelFormState = {
   propertyType: '',

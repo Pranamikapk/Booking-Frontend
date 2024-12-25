@@ -3,7 +3,7 @@ import axios from 'axios';
 import { RootState } from '../../app/store';
 import { Manager, ManagerData } from '../../types/managerTypes';
 
-const API_URL = 'http://localhost:3000/manager/';
+const API_URL = `${import.meta.env.VITE_API_BASE_URL}/manager/`;
 
 const normalizeManagerResponse = (data: any): Manager => {
     const { 
@@ -66,7 +66,6 @@ const logout = (): void => {
     localStorage.removeItem('manager');
 };
 
-// Redux Slice
 interface ManagerState {
     manager: Manager | null;
     isError: boolean;
@@ -87,7 +86,6 @@ const initialState: ManagerState = {
     message: ''
 };
 
-// Async Thunks
 export const registerThunk = createAsyncThunk<Manager, ManagerData, { rejectValue: string }>(
     'managerAuth/register',
     async (managerData, thunkAPI) => {
